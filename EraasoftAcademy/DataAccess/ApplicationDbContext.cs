@@ -1,0 +1,29 @@
+﻿using EraasoftAcademy.Models;
+using Microsoft.EntityFrameworkCore;
+
+namespace EraasoftAcademy.DataAccess
+{
+    public class ApplicationDbContext : DbContext
+    {
+
+        public DbSet<Quiz> Quizzes { get; set; }
+        public DbSet<QuizQuestion> QuizQuestions { get; set; }
+        public DbSet<QuestionChoices> QuestionChoices { get; set; }
+        public DbSet<QuizAttempt> QuizAttempts { get; set; }
+        public DbSet<StudentAnswer> StudentAnswers { get; set; }
+
+
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
+        {
+        }
+
+
+        override protected void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            // Apply all configurations from the current assembly
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+        }
+
+    }
+}
