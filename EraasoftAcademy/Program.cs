@@ -23,7 +23,10 @@ namespace EraasoftAcademy
             builder.Services.AddScoped<IGenericRepository<QuestionChoices>, GenericRepository<QuestionChoices>>();
             builder.Services.AddScoped<IGenericRepository<QuizAttempt>, GenericRepository<QuizAttempt>>();
             builder.Services.AddScoped<IGenericRepository<StudentAnswer>, GenericRepository<StudentAnswer>>();
-
+            builder.Services.AddScoped<IGenericRepository<Session>, GenericRepository<Session>>();
+            builder.Services.AddScoped<IGenericRepository<StudentAttendance>, GenericRepository<StudentAttendance>>();
+            builder.Services.AddScoped<IGenericRepository<StudentEnrollment>, GenericRepository<StudentEnrollment>>();
+            
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
