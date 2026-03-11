@@ -11,6 +11,9 @@ namespace EraasoftAcademy.DataAccess
         public DbSet<QuestionChoices> QuestionChoices { get; set; }
         public DbSet<QuizAttempt> QuizAttempts { get; set; }
         public DbSet<StudentAnswer> StudentAnswers { get; set; }
+        public DbSet<Session> Sessions { get; set; }
+        public DbSet<StudentAttendance> StudentAttendances { get; set; }
+        public DbSet<StudentEnrollment> StudentEnrollments { get; set; }
 
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
