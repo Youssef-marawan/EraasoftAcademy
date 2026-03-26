@@ -22,6 +22,32 @@ namespace EraasoftAcademy.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("EraasoftAcademy.Models.Course", b =>
+                {
+                    b.Property<int>("Course_Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Course_Id"));
+
+                    b.Property<string>("Course_Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("Credits")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Teacher_Id")
+                        .HasColumnType("int");
+
+                    b.HasKey("Course_Id");
+
+                    b.HasIndex("Teacher_Id");
+
+                    b.ToTable("Courses");
+                });
+
             modelBuilder.Entity("EraasoftAcademy.Models.QuestionChoices", b =>
                 {
                     b.Property<int>("Id")
@@ -57,6 +83,9 @@ namespace EraasoftAcademy.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("CourseId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(1000)
@@ -64,6 +93,9 @@ namespace EraasoftAcademy.Migrations
 
                     b.Property<TimeSpan>("Duration")
                         .HasColumnType("time");
+
+                    b.Property<int>("InstructorId")
+                        .HasColumnType("int");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -84,6 +116,8 @@ namespace EraasoftAcademy.Migrations
                         .HasColumnType("float");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CourseId");
 
                     b.HasIndex("QuizCode")
                         .IsUnique();
@@ -158,6 +192,58 @@ namespace EraasoftAcademy.Migrations
                     b.ToTable("QuizQuestions", (string)null);
                 });
 
+            modelBuilder.Entity("EraasoftAcademy.Models.Session", b =>
+                {
+                    b.Property<int>("SessionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SessionId"));
+
+                    b.Property<int>("CourseId")
+                        .HasColumnType("int");
+
+                    b.Property<TimeSpan>("EndTime")
+                        .HasColumnType("time");
+
+                    b.Property<string>("RoomNUM")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime>("SessionDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<TimeSpan>("StartTime")
+                        .HasColumnType("time");
+
+                    b.HasKey("SessionId");
+
+                    b.ToTable("Sessions");
+                });
+
+            modelBuilder.Entity("EraasoftAcademy.Models.Student", b =>
+                {
+                    b.Property<int>("Student_Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Student_Id"));
+
+                    b.Property<DateTime>("EnrollmentDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("User_Id")
+                        .HasColumnType("int");
+
+                    b.HasKey("Student_Id");
+
+                    b.HasIndex("User_Id")
+                        .IsUnique();
+
+                    b.ToTable("Students");
+                });
+
             modelBuilder.Entity("EraasoftAcademy.Models.StudentAnswer", b =>
                 {
                     b.Property<int>("Id")
@@ -189,6 +275,136 @@ namespace EraasoftAcademy.Migrations
                     b.ToTable("StudentAnswers");
                 });
 
+            modelBuilder.Entity("EraasoftAcademy.Models.StudentAttendance", b =>
+                {
+                    b.Property<int>("AttendanceId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AttendanceId"));
+
+                    b.Property<int>("EnrollmentId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("SessionId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("StudentId")
+                        .HasColumnType("int");
+
+                    b.HasKey("AttendanceId");
+
+                    b.HasIndex("EnrollmentId");
+
+                    b.HasIndex("SessionId");
+
+                    b.ToTable("StudentAttendances");
+                });
+
+            modelBuilder.Entity("EraasoftAcademy.Models.StudentEnrollment", b =>
+                {
+                    b.Property<int>("EnrollmentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EnrollmentId"));
+
+                    b.Property<int>("CourseId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("EnrollmentDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("StudentId")
+                        .HasColumnType("int");
+
+                    b.HasKey("EnrollmentId");
+
+                    b.ToTable("StudentEnrollments");
+                });
+
+            modelBuilder.Entity("EraasoftAcademy.Models.Teacher", b =>
+                {
+                    b.Property<int>("Teacher_Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Teacher_Id"));
+
+                    b.Property<DateTime>("HireDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Specialization")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("User_Id")
+                        .HasColumnType("int");
+
+                    b.HasKey("Teacher_Id");
+
+                    b.HasIndex("User_Id")
+                        .IsUnique();
+
+                    b.ToTable("Teachers");
+                });
+
+            modelBuilder.Entity("EraasoftAcademy.Models.User", b =>
+                {
+                    b.Property<int>("User_Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("User_Id"));
+
+                    b.Property<DateTime>("DateofBirth")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("F_Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("L_Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("User_Id");
+
+                    b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("EraasoftAcademy.Models.Course", b =>
+                {
+                    b.HasOne("EraasoftAcademy.Models.Teacher", "Teacher")
+                        .WithMany("Courses")
+                        .HasForeignKey("Teacher_Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Teacher");
+                });
+
             modelBuilder.Entity("EraasoftAcademy.Models.QuestionChoices", b =>
                 {
                     b.HasOne("EraasoftAcademy.Models.QuizQuestion", "QuizQuestion")
@@ -198,6 +414,17 @@ namespace EraasoftAcademy.Migrations
                         .IsRequired();
 
                     b.Navigation("QuizQuestion");
+                });
+
+            modelBuilder.Entity("EraasoftAcademy.Models.Quiz", b =>
+                {
+                    b.HasOne("EraasoftAcademy.Models.Course", "Course")
+                        .WithMany("Quizzes")
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Course");
                 });
 
             modelBuilder.Entity("EraasoftAcademy.Models.QuizAttempt", b =>
@@ -220,6 +447,17 @@ namespace EraasoftAcademy.Migrations
                         .IsRequired();
 
                     b.Navigation("Quiz");
+                });
+
+            modelBuilder.Entity("EraasoftAcademy.Models.Student", b =>
+                {
+                    b.HasOne("EraasoftAcademy.Models.User", "User")
+                        .WithOne("Student")
+                        .HasForeignKey("EraasoftAcademy.Models.Student", "User_Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("EraasoftAcademy.Models.StudentAnswer", b =>
@@ -249,6 +487,39 @@ namespace EraasoftAcademy.Migrations
                     b.Navigation("QuizQuestion");
                 });
 
+            modelBuilder.Entity("EraasoftAcademy.Models.StudentAttendance", b =>
+                {
+                    b.HasOne("EraasoftAcademy.Models.StudentEnrollment", "Enrollment")
+                        .WithMany("StudentAttendances")
+                        .HasForeignKey("EnrollmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EraasoftAcademy.Models.Session", null)
+                        .WithMany("StudentAttendances")
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Enrollment");
+                });
+
+            modelBuilder.Entity("EraasoftAcademy.Models.Teacher", b =>
+                {
+                    b.HasOne("EraasoftAcademy.Models.User", "User")
+                        .WithOne("Teacher")
+                        .HasForeignKey("EraasoftAcademy.Models.Teacher", "User_Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("EraasoftAcademy.Models.Course", b =>
+                {
+                    b.Navigation("Quizzes");
+                });
+
             modelBuilder.Entity("EraasoftAcademy.Models.Quiz", b =>
                 {
                     b.Navigation("QuizAttempts");
@@ -264,6 +535,30 @@ namespace EraasoftAcademy.Migrations
             modelBuilder.Entity("EraasoftAcademy.Models.QuizQuestion", b =>
                 {
                     b.Navigation("QuestionChoices");
+                });
+
+            modelBuilder.Entity("EraasoftAcademy.Models.Session", b =>
+                {
+                    b.Navigation("StudentAttendances");
+                });
+
+            modelBuilder.Entity("EraasoftAcademy.Models.StudentEnrollment", b =>
+                {
+                    b.Navigation("StudentAttendances");
+                });
+
+            modelBuilder.Entity("EraasoftAcademy.Models.Teacher", b =>
+                {
+                    b.Navigation("Courses");
+                });
+
+            modelBuilder.Entity("EraasoftAcademy.Models.User", b =>
+                {
+                    b.Navigation("Student")
+                        .IsRequired();
+
+                    b.Navigation("Teacher")
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

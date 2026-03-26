@@ -16,16 +16,17 @@ namespace EraasoftAcademy.DataAccess.Configurations
 
             builder.Property(e => e.EnrollmentDate)
                 .IsRequired();
+/*
+            builder.HasOne(e => e.Student)
+                .WithMany(s => s.StudentEnrollments)
+                .HasForeignKey(e => e.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
 
-            //builder.HasOne(e => e.Student)
-            //    .WithMany(s => s.StudentEnrollments)
-            //    .HasForeignKey(e => e.StudentId)
-            //    .OnDelete(DeleteBehavior.Restrict);
-
-            //builder.HasOne(e => e.Course)
-            //    .WithMany(c => c.StudentEnrollments)
-            //    .HasForeignKey(e => e.CourseId)
-            //    .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne(e => e.Course)
+                .WithMany(c => c.StudentEnrollments)
+                .HasForeignKey(e => e.CourseId)
+                .OnDelete(DeleteBehavior.Restrict);
+*/
         }
     }
 }

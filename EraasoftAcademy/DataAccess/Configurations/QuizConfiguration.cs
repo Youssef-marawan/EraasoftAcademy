@@ -16,11 +16,11 @@ namespace EraasoftAcademy.DataAccess.Configurations
 			builder.HasIndex(q => q.QuizCode).IsUnique(); // Ensure QuizCode is unique
 
             // Relationships
-           /* builder.HasOne(q => q.Course)
+            builder.HasOne(q => q.Course)
 				   .WithMany(c => c.Quizzes)
 				   .HasForeignKey(q => q.CourseId)
 				   .OnDelete(DeleteBehavior.Cascade);
-		   */
+		   
 			
 			builder.HasMany(q => q.QuizQuestions)
 				   .WithOne(qq => qq.Quiz)

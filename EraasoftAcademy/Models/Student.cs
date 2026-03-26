@@ -12,6 +12,6 @@ namespace EraasoftAcademy.Models
         public int User_Id { get; set; }
         public DateTime EnrollmentDate { get; set; }
         public User User { get; set; }
-        public ICollection<Course> Courses { get; set; }
+       // public ICollection<Course> Courses { get; set; }
     }
 }

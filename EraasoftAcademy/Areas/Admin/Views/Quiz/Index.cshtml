@@ -1,0 +1,139 @@
+﻿@using EraasoftAcademy.ViewModel
+@model QuizVM
+<div class="row">
+    <div class="col-12">
+        <div class="card h-lg-100 overflow-hidden">
+            <div class="card-body p-0">
+                <div class="table-responsive scrollbar">
+                    <div class="card-footer bg-light py-2">
+                        <div class="row flex-between-center">
+
+
+                            <div class="col-auto-"><a class="btn btn-sm btn-success me-1" href="@Url.Action("Create", "Movie", new { area = "Admin" })">ADD</a></div>
+                        </div>
+                    </div>
+                    <table class="table table-dashboard mb-0 table-borderless fs--1 border-200 align-middle">
+                        <thead class="bg-light">
+                            <tr class="text-900 text-center">
+                                <th scope="col" class="text-start">Title</th>
+                                <th scope="col" class="text-start">Description</th>
+                                <th scope="col">TotalMarks</th>
+                                <th scope="col">QuizCode</th>
+                                <th scope="col">Course</th>
+                                <th scope="col">Options</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.QuizList)
+                            {
+                                <tr class="border-bottom border-200 text-center">
+
+                                    <td class="align-middle text-start">
+                                        <h6 class="mb-0 fw-semi-bold">
+
+                                            @item.Title
+
+                                        </h6>
+                                    </td>
+                                    <td class="align-middle text-start">
+                                        <h6 class="mb-0 fw-semi-bold">
+
+                                            @item.Description
+
+                                        </h6>
+                                    </td>
+                                    <td class="align-middle text-start">
+                                        <h6 class="mb-0 fw-semi-bold">
+
+                                            @item.TotalMarks
+
+                                        </h6>
+                                    </td>
+                                    <td class="align-middle text-start">
+                                        <h6 class="mb-0 fw-semi-bold">
+
+                                            @item.QuizCode
+
+                                        </h6>
+                                    </td>
+                                    <td class="align-middle text-start">
+                                        <h6 class="mb-0 fw-semi-bold">
+
+                                            @item.CourseId
+
+                                        </h6>
+                                    </td>
+
+                                    
+
+
+
+
+
+                                   
+
+                                    
+
+
+                                    <td class="align-middle">
+                                        <a class="btn btn-sm btn-primary me-1"
+                                           href="@Url.Action("Edit", "Quiz", new { id = item.Id, area = "Admin" })">
+                                            Edit
+                                        </a>
+                                        <a href="/Admin/Quiz/Delete/@item.Id" class="btn btn-sm btn-danger btn-delete">Delete</a>
+                                       
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+<script>
+         document.addEventListener("DOMContentLoaded", function () {
+        const deleteButtons = document.querySelectorAll(".btn-delete");
+
+        deleteButtons.forEach(button => {
+            button.addEventListener("click", function (e) {
+                e.preventDefault();
+
+                const url = this.tagName === "A" ? this.getAttribute("href") : this.dataset.url;
+
+                Swal.fire({
+                    title: "Are you sure?",
+                    text: "This action cannot be undone!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#d33",
+                    cancelButtonColor: "#3085d6",
+                    confirmButtonText: "Yes, delete it!"
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            title: "Deleted!",
+                            text: "Your file has been deleted.",
+                            icon: "success",
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.href = url;
+                        });
+                    }
+                });
+            });
+        });
+    });
+
+</script>
+
+
+
+

@@ -19,10 +19,11 @@ namespace EraasoftAcademy.Models
 
         // Course RelationShip
 
-        /*
+        
         public int CourseId { get; set; }// Course RelationShip
         public Course Course { get; set; }
-		*/
+		
+        public int InstructorId { get; set; } // Instructor RelationShip
 
         public ICollection<QuizQuestion> QuizQuestions { get; set; }= [];// QuizQuestion RelationShip
 		public ICollection<QuizAttempt> QuizAttempts { get; set; } = []; // QuizAttempt RelationShip

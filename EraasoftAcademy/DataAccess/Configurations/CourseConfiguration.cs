@@ -1,3 +1,7 @@
+using EraasoftAcademy.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
 public class CourseConfig : IEntityTypeConfiguration<Course>
 {
     public void Configure(EntityTypeBuilder<Course> builder)
@@ -11,5 +15,10 @@ public class CourseConfig : IEntityTypeConfiguration<Course>
         builder.HasOne(x => x.Teacher)
             .WithMany(x => x.Courses)
             .HasForeignKey(x => x.Teacher_Id);
+
+        builder.HasMany(c => c.Quizzes)
+                    .WithOne(q => q.Course)
+                   .HasForeignKey(q => q.Id)
+                   .OnDelete(DeleteBehavior.Cascade);
     }
 }

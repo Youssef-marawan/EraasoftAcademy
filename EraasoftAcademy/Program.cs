@@ -46,7 +46,7 @@ namespace EraasoftAcademy
 
             app.MapControllerRoute(
                 name: "default",
-                pattern: "{controller=Home}/{action=Index}/{id?}");
+                pattern: "{area=Admin}/{controller=Quiz}/{action=Index}/{id?}");
 
             app.Run();
         }

@@ -1,3 +1,7 @@
+using EraasoftAcademy.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
 public class TeacherConfig : IEntityTypeConfiguration<Teacher>
 {
     public void Configure(EntityTypeBuilder<Teacher> builder)

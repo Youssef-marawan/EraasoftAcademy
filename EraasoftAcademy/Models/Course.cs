@@ -18,6 +18,8 @@ namespace EraasoftAcademy.Models
 
         public Teacher Teacher { get; set; }
 
-        public ICollection<Student> Students { get; set; }
+        // public ICollection<Student> Students { get; set; }
+        public ICollection<Quiz>? Quizzes { get; set; }
+
     }
 }
