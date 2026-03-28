@@ -15,13 +15,13 @@ namespace EraasoftAcademy.Models
 		public TimeSpan Duration { get; set; } // duration of the quiz
 		public double TotalMarks { get; set; } // total marks for the quiz
 		public bool IsActive { get; set; } = true; // indicates if the quiz is currently active or not
-		public string QuizCode { get; set; } = null!; // a unique code for the quiz that students can use to access it 
+		public string? QuizCode { get; set; }  // a unique code for the quiz that students can use to access it 
 
         // Course RelationShip
 
         
         public int CourseId { get; set; }// Course RelationShip
-        public Course Course { get; set; }
+        public Course? Course { get; set; }
 		
         public int InstructorId { get; set; } // Instructor RelationShip
 

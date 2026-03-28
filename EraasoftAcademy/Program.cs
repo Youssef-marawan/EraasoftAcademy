@@ -26,7 +26,9 @@ namespace EraasoftAcademy
             builder.Services.AddScoped<IGenericRepository<Session>, GenericRepository<Session>>();
             builder.Services.AddScoped<IGenericRepository<StudentAttendance>, GenericRepository<StudentAttendance>>();
             builder.Services.AddScoped<IGenericRepository<StudentEnrollment>, GenericRepository<StudentEnrollment>>();
+            builder.Services.AddScoped<IGenericRepository<Course>, GenericRepository<Course>>();
             
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.

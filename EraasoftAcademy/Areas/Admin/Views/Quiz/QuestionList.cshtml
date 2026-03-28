@@ -1,15 +1,21 @@
-﻿@using EraasoftAcademy.ViewModel
-@model QuizVM
+﻿@model List<EraasoftAcademy.Models.QuizQuestion>
+
 <div class="row">
     <div class="col-12">
         <div class="card h-lg-100 overflow-hidden">
             <div class="card-body p-0">
+
                 <div class="card-footer bg-light py-2">
                     <div class="row flex-between-center">
                         <div class="col-auto">
                             <a class="btn btn-sm btn-success me-1"
-                               href="@Url.Action("Create", "Quiz", new { area = "Admin" })">
-                                ADD
+                               href="@Url.Action("CreateQuestion", "Quiz", new { quizId = ViewBag.QuizId ,area = "Admin" })">
+                                ADD Question
+                            </a>
+
+                            <a class="btn btn-sm btn-secondary"
+                               href="@Url.Action("Index", "Quiz", new { area = "Admin" })">
+                                Back
                             </a>
                         </div>
                     </div>
@@ -18,69 +24,59 @@
                 <div class="table-responsive scrollbar">
                     <table class="table table-bordered mb-0 fs--1 border-200 align-middle text-center">
 
-
                         <thead class="bg-light">
                             <tr class="text-900 text-center">
-                                <th style="width:15%">Title</th>
-                                <th style="width:25%">Description</th>
-                                <th style="width:10%">TotalMarks</th>
-                                <th style="width:15%">QuizCode</th>
-                                <th style="width:15%">Course</th>
+                                <th style="width:25%">Question</th>
+                                <th style="width:10%">Marks</th>
+                                <th style="width:20%">Type</th>
+                                <th style="width:25%">Answers</th>
                                 <th style="width:20%">Options</th>
                             </tr>
                         </thead>
 
-
                         <tbody>
-                            @foreach (var item in Model.QuizList)
+                            @foreach (var item in Model)
                             {
                                 <tr class="border-bottom border-200">
 
                                     <td>
                                         <h6 class="mb-0 fw-semi-bold">
-                                            @item.Title
+                                            @item.QuestionText
                                         </h6>
                                     </td>
 
                                     <td>
-                                        <h6 class="mb-0 fw-semi-bold">
-                                            @item.Description
-                                        </h6>
+                                        <span class="badge bg-info">
+                                            @item.Marks
+                                        </span>
                                     </td>
 
                                     <td>
-                                        <h6 class="mb-0 fw-semi-bold">
-                                            @item.TotalMarks
-                                        </h6>
+                                        <span class="badge bg-secondary">
+                                            @item.QuestionType
+                                        </span>
                                     </td>
-
                                     <td>
-                                        <h6 class="mb-0 fw-semi-bold">
-                                            @item.QuizCode
-                                        </h6>
-                                    </td>
+                                    <div class="d-flex flex-column gap-1">
 
-                                    <td>
-                                        <h6 class="mb-0 fw-semi-bold">
-                                            @item.Course.Course_Name
-                                            
-                                        </h6>
-                                    </td>
+                                        @foreach (var ans in item.QuestionChoices)
+                                        {
+                                            <span class="badge @(ans.IsCorrect ? "bg-success" : "bg-light text-dark") text-start p-2">
+                                                @ans.ChoiceText
+                                            </span>
+                                        }
 
+                                    </div>
+                                    </td>
                                     <td>
                                         <div class="d-flex justify-content-center gap-2 flex-wrap">
 
-                                            <a class="btn btn-sm btn-outline-info"
-                                               href="@Url.Action("QuestionList", "Quiz", new { id = item.Id, area = "Admin" })">
-                                                <i class="fas fa-question-circle me-1"></i> Questions
-                                            </a>
-
                                             <a class="btn btn-sm btn-outline-primary"
-                                               href="@Url.Action("Edit", "Quiz", new { id = item.Id, area = "Admin" })">
+                                               href="@Url.Action("EditQuestion", "Quiz", new { id = item.Id, area = "Admin" })">
                                                 <i class="fas fa-edit me-1"></i> Edit
                                             </a>
 
-                                            <a href="/Admin/Quiz/Delete/@item.Id"
+                                            <a href="/Admin/Quiz/DeleteQuestion/@item.Id"
                                                class="btn btn-sm btn-outline-danger btn-delete">
                                                 <i class="fas fa-trash-alt me-1"></i> Delete
                                             </a>
@@ -100,6 +96,7 @@
     </div>
 </div>
 
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const deleteButtons = document.querySelectorAll(".btn-delete");
@@ -107,12 +104,11 @@
         deleteButtons.forEach(button => {
             button.addEventListener("click", function (e) {
                 e.preventDefault();
-
                 const url = this.getAttribute("href");
 
                 Swal.fire({
                     title: "Are you sure?",
-                    text: "This action cannot be undone!",
+                    text: "This question will be deleted!",
                     icon: "warning",
                     showCancelButton: true,
                     confirmButtonColor: "#d33",
@@ -120,15 +116,7 @@
                     confirmButtonText: "Yes, delete it!"
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        Swal.fire({
-                            title: "Deleted!",
-                            text: "Item deleted successfully.",
-                            icon: "success",
-                            timer: 1200,
-                            showConfirmButton: false
-                        }).then(() => {
-                            window.location.href = url;
-                        });
+                        window.location.href = url;
                     }
                 });
             });
