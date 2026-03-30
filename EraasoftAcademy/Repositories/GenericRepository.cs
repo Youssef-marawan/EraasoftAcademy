@@ -27,9 +27,19 @@ namespace EraasoftAcademy.Repositories
         {
             _dbSet.Remove(entity);
         }
-        public async Task<T> GetByIdAsync(int id)
+        public async Task<T?> GetByIdAsync(int id, Expression<Func<T, object>>[]? includes = null)
         {
-            return await _dbSet.FindAsync(id);
+            IQueryable<T> entities = _dbSet.AsQueryable();
+
+            if (includes != null)
+            {
+                foreach (var include in includes)
+                {
+                    entities = entities.Include(include);
+                }
+            }
+
+            return await entities.FirstOrDefaultAsync(e => EF.Property<int>(e, "Id") == id);
         }
         public async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>>? expression = null, Expression<Func<T, object>>[]? includes = null, bool tracked = true)
         {

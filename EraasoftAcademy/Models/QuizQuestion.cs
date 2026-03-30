@@ -15,9 +15,7 @@ namespace EraasoftAcademy.Models
         public double Marks { get; set; } // marks or points allocated for the question
 		public bool IsActive { get; set; } = true; // indicates if the question is currently active or not
         public int QuizId { get; set; } // foreign key to the Quiz entity
-        public Quiz Quiz { get; set; } // Quiz RelationShip
-        public ICollection<QuestionChoices> QuestionChoices { get; set; } = []; // question Choices relation
-
-
+        public Quiz? Quiz { get; set; } // Quiz RelationShip
+        public ICollection<QuestionChoices>? QuestionChoices { get; set; } = []; // question Choices relation
     }
 }

@@ -1,0 +1,113 @@
+﻿@using EraasoftAcademy.ViewModel
+@model AddChoicesVM
+
+<div class="row g-0">
+    <div class="col-lg-8 pe-lg-2">
+        <div class="card mb-3">
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <div class="card-header bg-body-tertiary">
+                <h6 class="mb-0">Add Choices</h6>
+            </div>
+
+            <div class="card-body">
+
+                <div class="mb-3">
+                    <h5>Question:</h5>
+                    <p class="text-primary">@Model.QuestionText</p>
+                </div>
+
+                <form method="post">
+                    <input type="hidden" asp-for="QuestionId" />
+
+                    <div id="choices-container">
+
+                        @for (int i = 0; i < Model.Choices.Count; i++)
+                        {
+                            <div class="choice-item mb-3 border p-2 rounded">
+
+                                <input asp-for="Choices[i].ChoiceText" readonly
+                                       class="form-control mb-2"
+                                       placeholder="Enter choice text" />
+
+                                <div class="d-flex justify-content-between">
+
+                                    <div class="form-check">
+                                        <input asp-for="Choices[i].IsCorrect"
+                                               class="form-check-input" />
+                                        <label class="form-check-label">Correct</label>
+                                    </div>
+
+                                    <a href="/Admin/Quiz/DeleteChoice/@Model.Choices[i].ChoiceId"
+                                       class="btn btn-sm btn-outline-danger btn-delete">
+                                        <i class="fas fa-trash-alt me-1"></i> Delete
+                                    </a>
+
+                                </div>
+                            </div>
+                        }
+
+                    </div>
+
+                    <button type="button" id="add-choice" class="btn btn-secondary mt-2">
+                        Add Choice
+                    </button>
+
+                    <button type="submit" class="btn btn-primary mt-2">
+                        Save Choices
+                    </button>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+
+    <script>
+        let index = @Model.Choices.Count;
+
+        document.getElementById("add-choice").addEventListener("click", function () {
+
+            let container = document.getElementById("choices-container");
+
+                    let html = `
+        <div class="choice-item mb-3 border p-2 rounded">
+
+            <input name="Choices[${index}].ChoiceText"
+                   class="form-control mb-2"
+                   placeholder="Enter choice text" />
+
+             <div class="form-check">
+
+                <input type="checkbox"
+                       name="Choices[${index}].IsCorrect"
+                       value="true"
+                       class="form-check-input" />
+
+                <input type="hidden"
+                       name="Choices[${index}].IsCorrect"
+                       value="false" />
+
+                <label class="form-check-label">Correct</label>
+            </div>
+
+            <button type="button"
+                    class="btn btn-danger btn-sm remove-choice">
+                Remove
+            </button>
+
+        </div>
+        `;
+
+            container.insertAdjacentHTML("beforeend", html);
+            index++;
+        });
+        document.addEventListener("click", function (e) {
+            if (e.target.classList.contains("remove-choice")) {
+
+                e.target.closest(".choice-item").remove();
+            }
+        });
+    </script>
+}

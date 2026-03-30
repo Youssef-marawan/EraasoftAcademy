@@ -1,0 +1,75 @@
+﻿@using DomainLayer.Enums
+@model EraasoftAcademy.Models.QuizQuestion
+
+<div class="row g-0">
+    <div class="col-lg-8 pe-lg-2">
+        <div class="card mb-3">
+            <div class="card-header bg-body-tertiary">
+                <h6 class="mb-0">Question Information</h6>
+            </div>
+
+            <div asp-validation-summary="All" class="text-danger"></div>
+
+            <div class="card-body">
+                <form method="post">
+
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="row flex-between-center">
+                                <div class="col-md">
+                                    <h5 class="mb-2 mb-md-0">Add a Question</h5>
+                                </div>
+                                <div class="col-auto">
+                                    <a href="/Admin/Quiz/QuestionList/@ViewBag.QuizId" class="btn btn-danger">Discard</a>
+                                    <button class="btn btn-primary" type="submit">Add Question</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row gx-2">
+
+                        
+                        <div class="col-12 mb-3">
+                            <label asp-for="QuestionText" class="form-label"></label>
+                            <textarea asp-for="QuestionText" class="form-control"></textarea>
+                            <span asp-validation-for="QuestionText" class="text-danger"></span>
+                        </div>
+
+                       
+                        <div class="col-sm-6 mb-3">
+                            <label asp-for="QuestionType" class="form-label"></label>
+                            <select asp-for="QuestionType" class="form-select"
+                                    asp-items="Html.GetEnumSelectList<QuestionTypes>()">
+                                <option value="">Select Type</option>
+                            </select>
+                            <span asp-validation-for="QuestionType" class="text-danger"></span>
+                        </div>
+
+                       
+                        <div class="col-sm-6 mb-3">
+                            <label asp-for="Marks" class="form-label"></label>
+                            <input asp-for="Marks" class="form-control" type="number" />
+                            <span asp-validation-for="Marks" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="col-12 mb-3">
+                            <div class="form-check form-switch">
+                                <label class="form-check-label" asp-for="IsActive">Active Status</label>
+                                <input class="form-check-input" asp-for="IsActive" type="checkbox">
+                            </div>
+                            <span asp-validation-for="IsActive" class="text-danger"></span>
+                        </div>
+
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js"></script>
+}
