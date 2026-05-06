@@ -19,8 +19,7 @@ namespace EraasoftAcademy.DataAccess.Configurations
             builder.Property(a => a.StudentId)
                 .IsRequired();
             */
-            builder.Property(a => a.CreatedAt)
-                .IsRequired();
+            
 
             builder.Property(a => a.Score)
                 .IsRequired();

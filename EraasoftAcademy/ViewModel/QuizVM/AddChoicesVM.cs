@@ -1,6 +1,6 @@
 ﻿using EraasoftAcademy.Models;
 
-namespace EraasoftAcademy.ViewModel
+namespace EraasoftAcademy.ViewModel.Quiz
 {
     public class AddChoicesVM
     {

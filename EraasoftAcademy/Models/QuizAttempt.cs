@@ -11,10 +11,11 @@ namespace EraasoftAcademy.Models
         public DateTime SubmittedAt { get; set; } // when the quiz attempt was submitted
         public bool IsSubmitted { get; set; } = false; // whether the quiz attempt has been submitted or is still in progress
         public int Score { get; set; } // the score obtained in the quiz attempt
-        public string QuizCode { get; set; } // the code of the quiz being attempted
+        //public string QuizCode { get; set; } // the code of the quiz being attempted
         public int QuizId { get; set; } // foreign key to the Quiz entity
         public Quiz Quiz { get; set; } // navigation property to the Quiz entity
-        public TimeSpan CreatedAt { get; set; } // when the quiz attempt was created
+       // public TimeSpan CreatedAt { get; set; } // when the quiz attempt was created
+
 
         // Student RelationShip
 

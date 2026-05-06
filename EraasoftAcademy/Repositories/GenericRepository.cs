@@ -1,4 +1,5 @@
 ﻿using EraasoftAcademy.DataAccess;
+using EraasoftAcademy.Models;
 using EraasoftAcademy.Repositories.IRepositories;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -40,6 +41,16 @@ namespace EraasoftAcademy.Repositories
             }
 
             return await entities.FirstOrDefaultAsync(e => EF.Property<int>(e, "Id") == id);
+        }
+
+        public async Task<Quiz> GetByIdAsync_2(int id, Func<IQueryable<Quiz>, IQueryable<Quiz>> include = null)
+        {
+            IQueryable<Quiz> query = _context.Quizzes;
+
+            if (include != null)
+                query = include(query);
+
+            return await query.FirstOrDefaultAsync(q => q.Id == id);
         }
         public async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>>? expression = null, Expression<Func<T, object>>[]? includes = null, bool tracked = true)
         {

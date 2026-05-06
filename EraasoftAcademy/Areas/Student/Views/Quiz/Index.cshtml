@@ -1,0 +1,890 @@
+﻿@using EraasoftAcademy.ViewModel.QuizVM
+@model QuizVM
+@{
+    ViewData["Title"] = "Available Quizzes";
+}
+
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+
+<!-- ── Quiz Code Modal ──────────────────────────────────── -->
+<div class="ea-overlay" id="eaOverlay" onclick="closeCodeModal()">
+    <div class="ea-modal" id="eaModal" onclick="event.stopPropagation()">
+        <div class="ea-modal__header">
+            <div class="ea-modal__icon" id="eaModalIcon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+            </div>
+            <div>
+                <p class="ea-modal__label">Enter quiz code to continue</p>
+                <h3 class="ea-modal__title" id="eaModalTitle">Quiz Title</h3>
+            </div>
+            <button class="ea-modal__close" onclick="closeCodeModal()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="ea-modal__body">
+            <p class="ea-modal__hint">Your instructor shared a 6-character code for this quiz.</p>
+
+            <!-- OTP-style code boxes -->
+            <div class="ea-otp" id="eaOtp">
+                <input class="ea-otp__box" maxlength="1" type="text" inputmode="text" autocomplete="off" />
+                <input class="ea-otp__box" maxlength="1" type="text" inputmode="text" autocomplete="off" />
+                <input class="ea-otp__box" maxlength="1" type="text" inputmode="text" autocomplete="off" />
+                <span class="ea-otp__sep">—</span>
+                <input class="ea-otp__box" maxlength="1" type="text" inputmode="text" autocomplete="off" />
+                <input class="ea-otp__box" maxlength="1" type="text" inputmode="text" autocomplete="off" />
+                <input class="ea-otp__box" maxlength="1" type="text" inputmode="text" autocomplete="off" />
+            </div>
+
+            <p class="ea-modal__error" id="eaError">Incorrect code — please try again.</p>
+        </div>
+
+        <div class="ea-modal__footer">
+            <button class="ea-modal__cancel" onclick="closeCodeModal()">Cancel</button>
+            <button class="ea-modal__submit" id="eaSubmit" onclick="verifyCode()">
+                Verify &amp; Start
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                    <polyline points="12 5 19 12 12 19" />
+                </svg>
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="ea-page">
+
+    <!-- ── Header ─────────────────────────────────────── -->
+    <div class="ea-header">
+        <div class="ea-header__left">
+            <div class="ea-header__icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 11l3 3L22 4" />
+                    <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
+                </svg>
+            </div>
+            <div>
+                <h1 class="ea-header__title">Available Quizzes</h1>
+                <p class="ea-header__sub">Active right now — enter the code to begin</p>
+            </div>
+        </div>
+        <div class="ea-live-badge">
+            <span class="ea-live-dot"></span> Live
+        </div>
+    </div>
+
+    <!-- ── Empty State ────────────────────────────────── -->
+    @if (!Model.QuizList.Any())
+    {
+        <div class="ea-empty">
+            <div class="ea-empty__icon">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+            </div>
+            <p class="ea-empty__title">No active quizzes right now</p>
+            <p class="ea-empty__sub">Check back later — your instructor may publish one soon.</p>
+        </div>
+    }
+    else
+    {
+        <!-- ── Grid ──────────────────────────────────────── -->
+        <div class="ea-grid">
+            @{
+                var colors = new[] {
+                ("--c1-bg:#E6F1FB","--c1-accent:#185FA5","--c1-dot:#378ADD"),
+                ("--c1-bg:#EAF3DE","--c1-accent:#3B6D11","--c1-dot:#639922"),
+                ("--c1-bg:#EEEDFE","--c1-accent:#3C3489","--c1-dot:#7F77DD"),
+                ("--c1-bg:#FAECE7","--c1-accent:#993C1D","--c1-dot:#D85A30"),
+                ("--c1-bg:#E1F5EE","--c1-accent:#085041","--c1-dot:#1D9E75"),
+                ("--c1-bg:#FAEEDA","--c1-accent:#633806","--c1-dot:#BA7517"),
+                };
+                int i = 0;
+            }
+            @foreach (var quiz in Model.QuizList)
+            {
+                var (bg, accent, dot) = colors[i % colors.Length];
+                i++;
+                <div class="ea-card" style="@bg;@accent;@dot;" data-index="@i">
+                    <!-- accent stripe -->
+                    <div class="ea-card__stripe"></div>
+
+                    <!-- top row -->
+                    <div class="ea-card__top">
+                        <div class="ea-card__course-pill">
+                            <span class="ea-card__course-dot"></span>
+                            @quiz.Course.Course_Name
+                        </div>
+                        <span class="ea-card__status">
+                            <span class="ea-status-dot"></span>Active
+                        </span>
+                    </div>
+
+                    <!-- title -->
+                    <h2 class="ea-card__title">@quiz.Title</h2>
+
+                    <!-- description -->
+                    <p class="ea-card__desc">@quiz.Description</p>
+
+                    <!-- meta row -->
+                    <div class="ea-card__meta">
+                        <div class="ea-meta-item">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                            </svg>
+                            <span>@quiz.TotalMarks Marks</span>
+                        </div>
+                        <div class="ea-meta-item">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10" />
+                                <polyline points="12 6 12 12 16 14" />
+                            </svg>
+                            <span>@quiz.Duration min</span>
+                        </div>
+                        
+                    </div>
+
+                    <!-- divider -->
+                    <div class="ea-card__divider"></div>
+
+                    <!-- footer -->
+                    <div class="ea-card__footer">
+                        
+                        <button class="ea-btn"
+                                onclick="openCodeModal('@quiz.Id', '@quiz.Title', '@quiz.QuizCode')">
+                            Enter Code
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<!-- ── Script ──────────────────────────────────────────── -->
+<script>
+    var _quizId = '', _quizCode = '';
+
+    function openCodeModal(id, title, code) {
+        _quizId   = id;
+        _quizCode = (code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+        document.getElementById('eaModalTitle').textContent = title;
+        resetOtp();
+        document.getElementById('eaOverlay').classList.add('ea-overlay--visible');
+        document.getElementById('eaModal').classList.add('ea-modal--visible');
+        setTimeout(function () {
+            var first = document.querySelector('.ea-otp__box');
+            if (first) first.focus();
+        }, 220);
+    }
+
+    function closeCodeModal() {
+        document.getElementById('eaOverlay').classList.remove('ea-overlay--visible');
+        document.getElementById('eaModal').classList.remove('ea-modal--visible');
+        resetOtp();
+    }
+
+    function resetOtp() {
+        document.querySelectorAll('.ea-otp__box').forEach(function (b) { b.value = ''; b.classList.remove('ea-otp__box--error', 'ea-otp__box--ok'); });
+        document.getElementById('eaError').classList.remove('ea-modal__error--visible');
+        document.getElementById('eaSubmit').disabled = false;
+    }
+
+    function verifyCode() {
+        var boxes = document.querySelectorAll('.ea-otp__box');
+        var entered = '';
+        boxes.forEach(function (b) { entered += b.value.toUpperCase(); });
+
+        if (entered.length < 6) {
+            shakeOtp();
+            return;
+        }
+
+        if (entered === _quizCode) {
+            /* correct — navigate */
+            boxes.forEach(function (b) { b.classList.add('ea-otp__box--ok'); });
+            document.getElementById('eaSubmit').disabled = true;
+            setTimeout(function () {
+                window.location.href = '/Student/Quiz/QuizTake/' + _quizId;
+            }, 400);
+        } else {
+            /* wrong */
+            boxes.forEach(function (b) { b.classList.add('ea-otp__box--error'); });
+            document.getElementById('eaError').classList.add('ea-modal__error--visible');
+            shakeOtp();
+            setTimeout(function () {
+                boxes.forEach(function (b) { b.classList.remove('ea-otp__box--error'); b.value = ''; });
+                boxes[0].focus();
+            }, 700);
+        }
+    }
+
+    function shakeOtp() {
+        var otp = document.getElementById('eaOtp');
+        otp.classList.add('ea-otp--shake');
+        setTimeout(function () { otp.classList.remove('ea-otp--shake'); }, 500);
+    }
+
+    /* OTP keyboard navigation */
+    document.addEventListener('DOMContentLoaded', function () {
+        var boxes = document.querySelectorAll('.ea-otp__box');
+        boxes.forEach(function (box, idx) {
+            box.addEventListener('input', function () {
+                var val = box.value.replace(/[^a-zA-Z0-9]/g, '');
+                box.value = val.slice(-1).toUpperCase();
+                document.getElementById('eaError').classList.remove('ea-modal__error--visible');
+                box.classList.remove('ea-otp__box--error', 'ea-otp__box--ok');
+                if (val && idx < boxes.length - 1) boxes[idx + 1].focus();
+            });
+            box.addEventListener('keydown', function (e) {
+                if (e.key === 'Backspace' && !box.value && idx > 0) {
+                    boxes[idx - 1].focus();
+                }
+                if (e.key === 'Enter') verifyCode();
+                if (e.key === 'Escape') closeCodeModal();
+            });
+            box.addEventListener('paste', function (e) {
+                e.preventDefault();
+                var pasted = (e.clipboardData || window.clipboardData).getData('text')
+                              .replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 6);
+                boxes.forEach(function (b, i) { b.value = pasted[i] || ''; });
+                boxes[Math.min(pasted.length, boxes.length - 1)].focus();
+            });
+        });
+    });
+</script>
+
+<style>
+    /* ── Reset & Base ─────────────────────────────────────── */
+    .ea-page {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        padding: 2rem 1.5rem 3.5rem;
+        max-width: 1160px;
+        margin: 0 auto;
+        color: #1a1a2e;
+    }
+
+    /* ── Overlay ──────────────────────────────────────────── */
+    .ea-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.45);
+        backdrop-filter: blur(3px);
+        z-index: 9000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.22s ease;
+    }
+
+    .ea-overlay--visible {
+        opacity: 1;
+        pointer-events: all;
+    }
+
+    /* ── Modal ────────────────────────────────────────────── */
+    .ea-modal {
+        background: #fff;
+        border-radius: 20px;
+        border: 1px solid #e2e8f0;
+        width: 100%;
+        max-width: 420px;
+        margin: 1rem;
+        box-shadow: 0 24px 60px rgba(0,0,0,0.14);
+        transform: translateY(20px) scale(0.97);
+        transition: transform 0.25s cubic-bezier(.34,1.56,.64,1), opacity 0.22s ease;
+        opacity: 0;
+    }
+
+    .ea-modal--visible {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+
+    .ea-modal__header {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 22px 22px 0;
+    }
+
+    .ea-modal__icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 11px;
+        background: #185FA5;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .ea-modal__label {
+        font-size: 0.72rem;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin: 0 0 3px;
+    }
+
+    .ea-modal__title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0;
+        line-height: 1.3;
+    }
+
+    .ea-modal__close {
+        margin-left: auto;
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #94a3b8;
+        padding: 4px;
+        border-radius: 6px;
+        transition: color 0.15s, background 0.15s;
+        flex-shrink: 0;
+    }
+
+        .ea-modal__close:hover {
+            color: #475569;
+            background: #f1f5f9;
+        }
+
+    .ea-modal__body {
+        padding: 20px 22px 0;
+    }
+
+    .ea-modal__hint {
+        font-size: 0.8rem;
+        color: #64748b;
+        margin: 0 0 18px;
+        line-height: 1.55;
+    }
+
+    /* ── OTP boxes ────────────────────────────────────────── */
+    .ea-otp {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-bottom: 14px;
+    }
+
+    .ea-otp__box {
+        width: 48px;
+        height: 54px;
+        border-radius: 10px;
+        border: 1.5px solid #cbd5e1;
+        background: #f8fafc;
+        text-align: center;
+        font-family: 'Fira Code', monospace;
+        font-size: 1.3rem;
+        font-weight: 500;
+        color: #0f172a;
+        outline: none;
+        transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+        text-transform: uppercase;
+    }
+
+        .ea-otp__box:focus {
+            border-color: #185FA5;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(24,95,165,0.12);
+        }
+
+    .ea-otp__box--error {
+        border-color: #E24B4A !important;
+        background: #FCEBEB !important;
+        box-shadow: 0 0 0 3px rgba(226,75,74,0.12) !important;
+    }
+
+    .ea-otp__box--ok {
+        border-color: #639922 !important;
+        background: #EAF3DE !important;
+    }
+
+    .ea-otp__sep {
+        font-size: 1.1rem;
+        color: #cbd5e1;
+        user-select: none;
+    }
+
+    @@keyframes ea-shake {
+        0%, 100% {
+            transform: translateX(0);
+        }
+
+        20% {
+            transform: translateX(-7px);
+        }
+
+        40% {
+            transform: translateX(7px);
+        }
+
+        60% {
+            transform: translateX(-5px);
+        }
+
+        80% {
+            transform: translateX(4px);
+        }
+    }
+
+    .ea-otp--shake {
+        animation: ea-shake 0.45s ease;
+    }
+
+    /* ── Error message ────────────────────────────────────── */
+    .ea-modal__error {
+        font-size: 0.76rem;
+        font-weight: 600;
+        color: #A32D2D;
+        background: #FCEBEB;
+        border: 1px solid #F09595;
+        border-radius: 8px;
+        padding: 7px 12px;
+        margin-bottom: 4px;
+        display: none;
+    }
+
+    .ea-modal__error--visible {
+        display: block;
+    }
+
+    /* ── Modal footer ─────────────────────────────────────── */
+    .ea-modal__footer {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 18px 22px 22px;
+        border-top: 1px solid #f1f5f9;
+        margin-top: 18px;
+    }
+
+    .ea-modal__cancel {
+        background: none;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 10px;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #64748b;
+        padding: 9px 18px;
+        cursor: pointer;
+        transition: border-color 0.15s, color 0.15s;
+    }
+
+        .ea-modal__cancel:hover {
+            border-color: #94a3b8;
+            color: #334155;
+        }
+
+    .ea-modal__submit {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        background: #185FA5;
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 0.8rem;
+        font-weight: 700;
+        padding: 9px 20px;
+        cursor: pointer;
+        transition: filter 0.15s, transform 0.12s;
+    }
+
+        .ea-modal__submit:hover {
+            filter: brightness(1.1);
+        }
+
+        .ea-modal__submit:active {
+            transform: scale(0.97);
+        }
+
+        .ea-modal__submit:disabled {
+            background: #EAF3DE;
+            color: #639922;
+            cursor: not-allowed;
+            filter: none;
+        }
+
+    /* ── Header ──────────────────────────────────────────── */
+    .ea-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 2.25rem;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .ea-header__left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .ea-header__icon {
+        width: 44px;
+        height: 44px;
+        background: #185FA5;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        flex-shrink: 0;
+    }
+
+    .ea-header__title {
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: #0f172a;
+        letter-spacing: -0.4px;
+        margin: 0 0 2px;
+    }
+
+    .ea-header__sub {
+        font-size: 0.78rem;
+        color: #64748b;
+        margin: 0;
+    }
+
+    .ea-live-badge {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #993C1D;
+        background: #FAECE7;
+        border: 1px solid #F0997B;
+        border-radius: 20px;
+        padding: 5px 13px;
+    }
+
+    .ea-live-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #D85A30;
+        animation: ea-pulse 1.6s ease-in-out infinite;
+        display: inline-block;
+    }
+
+    @@keyframes ea-pulse {
+        0%, 100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        50% {
+            opacity: 0.4;
+            transform: scale(0.7);
+        }
+    }
+
+    /* ── Empty State ─────────────────────────────────────── */
+    .ea-empty {
+        text-align: center;
+        padding: 4rem 1rem;
+        background: #f8fafc;
+        border-radius: 16px;
+        border: 1px dashed #cbd5e1;
+    }
+
+    .ea-empty__icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        color: #94a3b8;
+    }
+
+    .ea-empty__title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #334155;
+        margin: 0 0 6px;
+    }
+
+    .ea-empty__sub {
+        font-size: 0.82rem;
+        color: #94a3b8;
+        margin: 0;
+    }
+
+    /* ── Grid ────────────────────────────────────────────── */
+    .ea-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 22px;
+    }
+
+    /* ── Card ────────────────────────────────────────────── */
+    .ea-card {
+        background: #fff;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        padding: 20px 22px 18px;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+        animation: ea-fadein 0.45s ease both;
+    }
+
+        .ea-card:nth-child(1) {
+            animation-delay: 0.05s;
+        }
+
+        .ea-card:nth-child(2) {
+            animation-delay: 0.12s;
+        }
+
+        .ea-card:nth-child(3) {
+            animation-delay: 0.19s;
+        }
+
+        .ea-card:nth-child(4) {
+            animation-delay: 0.26s;
+        }
+
+        .ea-card:nth-child(5) {
+            animation-delay: 0.33s;
+        }
+
+        .ea-card:nth-child(6) {
+            animation-delay: 0.40s;
+        }
+
+    @@keyframes ea-fadein {
+        from {
+            opacity: 0;
+            transform: translateY(14px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .ea-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 16px 40px rgba(0,0,0,0.09);
+        border-color: #cbd5e1;
+    }
+
+    .ea-card__stripe {
+        position: absolute;
+        left: 0;
+        top: 18px;
+        bottom: 18px;
+        width: 3.5px;
+        border-radius: 0 3px 3px 0;
+        background: var(--c1-dot);
+    }
+
+    .ea-card__top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+    }
+
+    .ea-card__course-pill {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: var(--c1-accent);
+        background: var(--c1-bg);
+        border: 1px solid transparent;
+        border-radius: 20px;
+        padding: 3px 10px;
+        letter-spacing: 0.02em;
+    }
+
+    .ea-card__course-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--c1-dot);
+        flex-shrink: 0;
+    }
+
+    .ea-card__status {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.68rem;
+        font-weight: 600;
+        color: #3B6D11;
+        background: #EAF3DE;
+        border: 1px solid #97C459;
+        border-radius: 20px;
+        padding: 2px 9px;
+    }
+
+    .ea-status-dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: #639922;
+        display: inline-block;
+    }
+
+    .ea-card__title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #0f172a;
+        letter-spacing: -0.25px;
+        line-height: 1.35;
+        margin: 0 0 8px;
+    }
+
+    .ea-card__desc {
+        font-size: 0.8rem;
+        color: #64748b;
+        line-height: 1.65;
+        margin: 0 0 14px;
+        flex: 1;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .ea-card__meta {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+    }
+
+    .ea-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.76rem;
+        font-weight: 500;
+        color: #475569;
+    }
+
+        .ea-meta-item svg {
+            color: var(--c1-dot);
+            flex-shrink: 0;
+        }
+
+    .ea-card__divider {
+        height: 1px;
+        background: #f1f5f9;
+        margin-bottom: 14px;
+    }
+
+    .ea-card__footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .ea-card__dates {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+    }
+
+    .ea-date-label {
+        font-size: 0.68rem;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+
+    .ea-date-val {
+        font-family: 'Fira Code', monospace;
+        font-size: 0.82rem;
+        font-weight: 500;
+        color: #0f172a;
+    }
+
+    .ea-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        background: var(--c1-accent);
+        color: #fff;
+        border: none;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.01em;
+        padding: 9px 18px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: filter 0.16s, transform 0.12s;
+        white-space: nowrap;
+    }
+
+        .ea-btn:hover {
+            filter: brightness(1.12);
+        }
+
+        .ea-btn:active {
+            transform: scale(0.97);
+        }
+
+    @@media (max-width: 640px) {
+        .ea-page {
+            padding: 1.25rem 1rem 2.5rem;
+        }
+
+        .ea-grid {
+            grid-template-columns: 1fr;
+            gap: 14px;
+        }
+
+        .ea-header__title {
+            font-size: 1.1rem;
+        }
+
+        .ea-otp__box {
+            width: 40px;
+            height: 46px;
+            font-size: 1.1rem;
+        }
+    }
+</style>

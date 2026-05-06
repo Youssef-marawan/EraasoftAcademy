@@ -1,0 +1,733 @@
+﻿<!DOCTYPE html>
+<html data-bs-theme="light" lang="en-US" dir="ltr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>EraaSoftAcademy | Student Panel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-w: 260px;
+            --accent: #4f6ef7;
+            --accent-soft: #eef0ff;
+            --accent-hover: #3a57e8;
+            --surface: #ffffff;
+            --bg: #f4f6fc;
+            --border: #e8eaf2;
+            --text-primary: #0f1422;
+            --text-secondary: #6b7280;
+            --text-muted: #9ca3af;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --sidebar-item-h: 42px;
+            --radius: 12px;
+            --radius-sm: 8px;
+            --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            width: var(--sidebar-w);
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-brand {
+            padding: 24px 20px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+            .sidebar-brand .logo-mark {
+                width: 36px;
+                height: 36px;
+                background: var(--accent);
+                border-radius: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 16px;
+                margin-bottom: 12px;
+            }
+
+            .sidebar-brand .brand-name {
+                font-family: 'DM Serif Display', serif;
+                font-size: 17px;
+                color: var(--text-primary);
+                line-height: 1.1;
+            }
+
+            .sidebar-brand .brand-sub {
+                font-size: 11px;
+                color: var(--text-muted);
+                letter-spacing: 0.06em;
+                text-transform: uppercase;
+                font-weight: 500;
+                margin-top: 2px;
+            }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 16px 12px;
+            overflow-y: auto;
+        }
+
+        .nav-section-label {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            padding: 0 8px;
+            margin: 16px 0 6px;
+        }
+
+            .nav-section-label:first-child {
+                margin-top: 0;
+            }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            height: var(--sidebar-item-h);
+            padding: 0 10px;
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 13.5px;
+            font-weight: 500;
+            transition: background 0.15s, color 0.15s;
+            position: relative;
+        }
+
+            .sidebar-link:hover {
+                background: var(--bg);
+                color: var(--text-primary);
+            }
+
+            .sidebar-link.active {
+                background: var(--accent-soft);
+                color: var(--accent);
+            }
+
+                .sidebar-link.active::before {
+                    content: '';
+                    position: absolute;
+                    left: 0;
+                    top: 6px;
+                    bottom: 6px;
+                    width: 3px;
+                    background: var(--accent);
+                    border-radius: 0 3px 3px 0;
+                    left: -12px;
+                }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .nav-badge {
+            margin-left: auto;
+            background: var(--accent);
+            color: #fff;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 7px;
+            border-radius: 99px;
+            line-height: 1.6;
+        }
+
+        .sidebar-footer {
+            padding: 12px;
+            border-top: 1px solid var(--border);
+        }
+
+        .sidebar-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+            .sidebar-user:hover {
+                background: var(--bg);
+            }
+
+        .avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4f6ef7, #9061f9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .user-info .user-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            line-height: 1.2;
+        }
+
+        .user-info .user-role {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .logout-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            height: 38px;
+            padding: 0 10px;
+            border: none;
+            border-radius: var(--radius-sm);
+            background: transparent;
+            color: var(--danger);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            margin-top: 4px;
+            transition: background 0.15s;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+            .logout-btn:hover {
+                background: #fef2f2;
+                color: var(--danger);
+            }
+
+        /* ── Main Content ── */
+        .main {
+            margin-left: var(--sidebar-w);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── Topbar ── */
+        .topbar {
+            height: 64px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 28px;
+            gap: 16px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .topbar-greeting {
+            flex: 1;
+        }
+
+            .topbar-greeting .greeting-text {
+                font-size: 14px;
+                font-weight: 600;
+                color: var(--text-primary);
+            }
+
+            .topbar-greeting .greeting-sub {
+                font-size: 12px;
+                color: var(--text-muted);
+            }
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .icon-btn {
+            width: 36px;
+            height: 36px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--surface);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-secondary);
+            position: relative;
+            transition: background 0.15s, border-color 0.15s;
+            font-size: 15px;
+        }
+
+            .icon-btn:hover {
+                background: var(--bg);
+                border-color: #d1d5db;
+                color: var(--text-primary);
+            }
+
+        .notif-dot {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 7px;
+            height: 7px;
+            background: var(--danger);
+            border-radius: 50%;
+            border: 1.5px solid var(--surface);
+        }
+
+        .topbar-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4f6ef7, #9061f9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 2px solid var(--border);
+            transition: border-color 0.15s;
+        }
+
+            .topbar-avatar:hover {
+                border-color: var(--accent);
+            }
+
+        /* ── Page body ── */
+        .page-body {
+            flex: 1;
+            padding: 28px;
+        }
+
+        /* ── Demo content ── */
+        .page-header {
+            margin-bottom: 24px;
+        }
+
+        .page-title {
+            font-family: 'DM Serif Display', serif;
+            font-size: 24px;
+            color: var(--text-primary);
+        }
+
+        .page-subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 3px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 18px 20px;
+        }
+
+            .stat-card .stat-label {
+                font-size: 12px;
+                font-weight: 500;
+                color: var(--text-muted);
+                letter-spacing: 0.03em;
+            }
+
+            .stat-card .stat-value {
+                font-size: 26px;
+                font-weight: 600;
+                color: var(--text-primary);
+                margin: 6px 0 2px;
+                line-height: 1;
+            }
+
+            .stat-card .stat-change {
+                font-size: 12px;
+                color: var(--success);
+                font-weight: 500;
+            }
+
+        .stat-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 17px;
+            margin-bottom: 14px;
+        }
+
+        .icon-blue {
+            background: #eef0ff;
+        }
+
+        .icon-green {
+            background: #ecfdf5;
+        }
+
+        .icon-amber {
+            background: #fffbeb;
+        }
+
+        .icon-purple {
+            background: #f5f3ff;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .card-link {
+            font-size: 12px;
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+            .card-link:hover {
+                text-decoration: underline;
+            }
+
+        .card-body {
+            padding: 16px 20px;
+        }
+
+        .course-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+            .course-item:last-child {
+                border-bottom: none;
+            }
+
+        .course-thumb {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .course-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .course-name {
+            font-size: 13.5px;
+            font-weight: 500;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .course-meta {
+            font-size: 11.5px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .progress-wrap {
+            margin-top: 7px;
+        }
+
+        .progress-bar-bg {
+            height: 4px;
+            background: var(--bg);
+            border-radius: 99px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 99px;
+            background: var(--accent);
+        }
+
+        .progress-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 3px;
+        }
+
+        .quiz-item {
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+            .quiz-item:last-child {
+                border-bottom: none;
+            }
+
+        .quiz-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .quiz-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .quiz-badge {
+            font-size: 10px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 99px;
+            white-space: nowrap;
+        }
+
+        .badge-pending {
+            background: #fffbeb;
+            color: #92400e;
+        }
+
+        .badge-done {
+            background: #ecfdf5;
+            color: #065f46;
+        }
+
+        .badge-late {
+            background: #fef2f2;
+            color: #991b1b;
+        }
+
+        .quiz-sub {
+            font-size: 11.5px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        @@media (max-width: 900px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @@media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .main {
+                margin-left: 0;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        /* Animations */
+        @@keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stat-card, .card {
+            animation: fadeUp 0.35s ease both;
+        }
+
+            .stat-card:nth-child(1) {
+                animation-delay: 0.05s;
+            }
+
+            .stat-card:nth-child(2) {
+                animation-delay: 0.10s;
+            }
+
+            .stat-card:nth-child(3) {
+                animation-delay: 0.15s;
+            }
+
+            .stat-card:nth-child(4) {
+                animation-delay: 0.20s;
+            }
+
+        .content-grid .card:nth-child(1) {
+            animation-delay: 0.25s;
+        }
+
+        .content-grid .card:nth-child(2) {
+            animation-delay: 0.30s;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="logo-mark">🎓</div>
+            <div class="brand-name">EraaSoft</div>
+            <div class="brand-sub">Academy</div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section-label">Menu</div>
+
+            <a href="/Student/Home" class="sidebar-link active">
+                <span class="nav-icon">🏠</span> Home
+            </a>
+            <a href="/Student/Courses" class="sidebar-link">
+                <span class="nav-icon">📚</span> My Courses
+                <!-- </><span class="nav-badge">4</span>-->
+            </a>
+            <a href="/Student/Quiz" class="sidebar-link">
+                <span class="nav-icon">📝</span> Quizzes
+                <!--
+                     <span class="nav-badge">2</span>
+                -->
+            </a>
+
+            <div class="nav-section-label">Account</div>
+
+            <a href="/Student/Payment/Index" class="sidebar-link">
+                <span class="nav-icon">💳</span> Payments
+            </a>
+            <a href="/Student/Home/profile" class="sidebar-link">
+                <span class="nav-icon">👤</span> Profile
+            </a>
+
+            <div class="nav-section-label">For New Course</div>
+
+            <a href="/Student/Payment/Buy" class="sidebar-link">
+                <span class="nav-icon">💳</span> Buy
+            </a>
+
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="sidebar-user">
+                <div class="avatar">AM</div>
+                <div class="user-info">
+                    <div class="user-name">Ahmed M.</div>
+                    <div class="user-role">Student</div>
+                </div>
+            </div>
+            <a href="/Identity/Account/Logout" class="logout-btn">
+                <span>🚪</span> Sign out
+            </a>
+        </div>
+    </aside>
+
+    <!-- ── Main ── -->
+    <div class="main">
+
+        <!-- Topbar -->
+        <header class="topbar">
+            <div class="topbar-greeting">
+                <div class="greeting-text">Good morning, Ahmed 👋</div>
+                <div class="greeting-sub">You have 2 quizzes pending this week</div>
+            </div>
+            <div class="topbar-actions">
+                <div class="icon-btn" title="Search">🔍</div>
+                <div class="icon-btn" title="Notifications">
+                    🔔
+                    <span class="notif-dot"></span>
+                </div>
+                <div class="topbar-avatar" title="Profile">AM</div>
+            </div>
+        </header>
+
+
+
+        <!-- PAGE CONTENT -->
+        <div class="card-box">
+            @RenderBody()
+        </div>
+
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- @await RenderSectionAsync("Scripts", required: false) -->
+</body>
+</html>
+

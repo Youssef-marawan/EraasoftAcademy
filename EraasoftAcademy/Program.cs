@@ -27,7 +27,10 @@ namespace EraasoftAcademy
             builder.Services.AddScoped<IGenericRepository<StudentAttendance>, GenericRepository<StudentAttendance>>();
             builder.Services.AddScoped<IGenericRepository<StudentEnrollment>, GenericRepository<StudentEnrollment>>();
             builder.Services.AddScoped<IGenericRepository<Course>, GenericRepository<Course>>();
-            
+            /*builder.Services.AddScoped<IGenericRepository<Payment>, GenericRepository<Payment>>();
+            builder.Services.AddScoped<IGenericRepository<BillingData>, GenericRepository<BillingData>>();
+            builder.Services.AddScoped<IGenericRepository<Fee>, GenericRepository<Fee>>();
+            */
 
             var app = builder.Build();
 
@@ -50,7 +53,7 @@ namespace EraasoftAcademy
 
             app.MapControllerRoute(
                 name: "default",
-                pattern: "{area=Admin}/{controller=Quiz}/{action=Index}/{id?}");
+                pattern: "{area=Student}/{controller=Home}/{action=Index}/{id?}");
 
             app.Run();
         }

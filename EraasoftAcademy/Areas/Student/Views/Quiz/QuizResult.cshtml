@@ -1,0 +1,1095 @@
+﻿@using EraasoftAcademy.ViewModel.QuizVM
+@using DomainLayer.Enums
+@model QuizResultVM
+@{
+    ViewData["Title"] = "Quiz Result";
+    Layout = null;
+
+    double percentage = Model.TotalMarks > 0
+                         ? Math.Round((double)Model.Score / Model.TotalMarks * 100, 1)
+                         : 0;
+    string grade = percentage >= 90 ? "A+" :
+                         percentage >= 80 ? "A" :
+                         percentage >= 70 ? "B" :
+                         percentage >= 60 ? "C" :
+                         percentage >= 50 ? "D" : "F";
+    bool passed = percentage >= 50;
+    int correctCount = Model.QuestionResults.Count(q => q.IsCorrect);
+    int incorrectCount = Model.QuestionResults.Count(q => !q.IsCorrect && q.StudentChoiceId != null);
+    int skippedCount = Model.QuestionResults.Count(q => q.StudentChoiceId == null);
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Result — @Model.QuizTitle</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fira+Code:wght@500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body>
+
+    <!-- ══════════════════════════════════════════════
+         HEADER
+    ══════════════════════════════════════════════ -->
+    <header class="rp-header">
+        <div class="rp-header__inner">
+            <div class="rp-header__brand">
+                <div class="rp-brand-icon"><i class="fas fa-graduation-cap"></i></div>
+                <div>
+                    <h1 class="rp-brand-title">@Model.QuizTitle</h1>
+                </div>
+            </div>
+            <a href="/Student/Quiz" class="rp-back-btn">
+                <i class="fas fa-arrow-left"></i> Back to Quizzes
+            </a>
+        </div>
+    </header>
+
+    <!-- ══════════════════════════════════════════════
+         HERO — SCORE CARD
+    ══════════════════════════════════════════════ -->
+    <section class="rp-hero @(passed ? "rp-hero--pass" : "rp-hero--fail")">
+        <div class="rp-hero__inner">
+
+            <!-- Radial score ring -->
+            <div class="rp-ring-wrap">
+                <svg class="rp-ring" viewBox="0 0 160 160">
+                    <circle cx="80" cy="80" r="68" class="rp-ring__track" />
+                    <circle cx="80" cy="80" r="68" class="rp-ring__fill"
+                            id="scoreRing"
+                            style="stroke:@(passed ? "#1D9E75" : "#E24B4A")" />
+                </svg>
+                <div class="rp-ring__center">
+                    <span class="rp-ring__pct" id="pctDisplay">0%</span>
+                    <span class="rp-ring__grade">@grade</span>
+                </div>
+            </div>
+
+            <!-- Score info -->
+            <div class="rp-hero__info">
+                <div class="rp-result-badge @(passed ? "rp-result-badge--pass" : "rp-result-badge--fail")">
+                    <i class="fas @(passed ? "fa-trophy" : "fa-circle-xmark")"></i>
+                    @(passed ? "Passed" : "Failed")
+                </div>
+                <h2 class="rp-hero__score">
+                    @Model.Score <span>/ @Model.TotalMarks</span>
+                </h2>
+                <p class="rp-hero__label">marks obtained</p>
+
+                <!-- 3 stat chips -->
+                <div class="rp-stats">
+                    <div class="rp-stat rp-stat--correct">
+                        <i class="fas fa-circle-check"></i>
+                        <span class="rp-stat__num">@correctCount</span>
+                        <span class="rp-stat__lbl">Correct</span>
+                    </div>
+                    <div class="rp-stat rp-stat--wrong">
+                        <i class="fas fa-circle-xmark"></i>
+                        <span class="rp-stat__num">@incorrectCount</span>
+                        <span class="rp-stat__lbl">Wrong</span>
+                    </div>
+                    <div class="rp-stat rp-stat--skip">
+                        <i class="fas fa-circle-minus"></i>
+                        <span class="rp-stat__num">@skippedCount</span>
+                        <span class="rp-stat__lbl">Skipped</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════
+         ANSWERS REVIEW
+    ══════════════════════════════════════════════ -->
+    <main class="rp-main">
+
+        <div class="rp-section-head">
+            <h3 class="rp-section-title">
+                <i class="fas fa-list-check"></i> Answer Review
+            </h3>
+            <div class="rp-filter-row">
+                <button class="rp-filter rp-filter--active" onclick="filterCards('all', this)">All</button>
+                <button class="rp-filter" onclick="filterCards('correct', this)">
+                    <i class="fas fa-check"></i> Correct
+                </button>
+                <button class="rp-filter" onclick="filterCards('wrong', this)">
+                    <i class="fas fa-times"></i> Wrong
+                </button>
+                <button class="rp-filter" onclick="filterCards('skipped', this)">
+                    <i class="fas fa-minus"></i> Skipped
+                </button>
+            </div>
+        </div>
+
+        <div class="rp-cards" id="cardContainer">
+            @{
+                int qNum = 0;
+            }
+            @foreach (var q in Model.QuestionResults)
+            {
+                qNum++;
+                string cardState = q.StudentChoiceId == null ? "skipped"
+                : q.IsCorrect ? "correct"
+                : "wrong";
+                <div class="rp-card rp-card--@cardState" data-state="@cardState">
+
+                    <!-- card top bar -->
+                    <div class="rp-card__bar">
+                        <div class="rp-card__left">
+                            <span class="rp-card__num">@qNum</span>
+                            @if (q.QuestionType == QuestionTypes.TrueFalse)
+                            {
+                                <span class="rp-type-badge rp-type-badge--tf">
+                                    <i class="fas fa-toggle-on"></i> True / False
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="rp-type-badge rp-type-badge--mcq">
+                                    <i class="fas fa-list-ul"></i> MCQ
+                                </span>
+                            }
+                        </div>
+                        <div class="rp-card__right">
+                            <span class="rp-marks-chip">@q.QuestionMarks marks</span>
+                            @if (cardState == "correct")
+                            {
+                                <span class="rp-verdict rp-verdict--correct">
+                                    <i class="fas fa-check"></i> Correct
+                                </span>
+                            }
+                            else if (cardState == "wrong")
+                            {
+                                <span class="rp-verdict rp-verdict--wrong">
+                                    <i class="fas fa-times"></i> Wrong
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="rp-verdict rp-verdict--skipped">
+                                    <i class="fas fa-minus"></i> Skipped
+                                </span>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- question text -->
+                    <p class="rp-card__q">@q.QuestionText</p>
+
+                    <!-- choices -->
+                    <div class="rp-choices">
+                        @{
+                            char letter = 'A';
+                        }
+                        @foreach (var choice in q.Choices)
+                        {
+                            bool isStudentAnswer = choice.Id == q.StudentChoiceId;
+                            bool isCorrectAnswer = choice.IsCorrect;
+
+                            string choiceClass = "";
+                            string iconClass = "";
+
+                            if (isCorrectAnswer && isStudentAnswer)
+                            {
+                                choiceClass = "rp-choice--correct-picked";
+                                iconClass = "fas fa-circle-check";
+                            }
+                            else if (isCorrectAnswer)
+                            {
+                                choiceClass = "rp-choice--correct";
+                                iconClass = "fas fa-circle-check";
+                            }
+                            else if (isStudentAnswer)
+                            {
+                                choiceClass = "rp-choice--wrong-picked";
+                                iconClass = "fas fa-circle-xmark";
+                            }
+
+                            <div class="rp-choice @choiceClass">
+                                <span class="rp-choice__letter @(choiceClass != "" ? "rp-choice__letter--hi" : "")">@letter</span>
+                                <span class="rp-choice__text">@choice.ChoiceText</span>
+                                @if (iconClass != "")
+                                {
+                                    <i class="rp-choice__icon @iconClass"></i>
+                                }
+                                @if (isStudentAnswer && !isCorrectAnswer && cardState != "skipped")
+                                {
+                                    <span class="rp-choice__tag rp-choice__tag--yours">Your answer</span>
+                                }
+                                @if (isCorrectAnswer && !isStudentAnswer)
+                                {
+                                    <span class="rp-choice__tag rp-choice__tag--correct">Correct answer</span>
+                                }
+                            </div>
+                            letter++;
+                        }
+                    </div>
+
+                </div>
+            }
+        </div>
+
+        <!-- back to top -->
+        <div class="rp-actions">
+            <a href="/Student/Quiz" class="rp-action-btn rp-action-btn--outline">
+                <i class="fas fa-home"></i> Back to Quizzes
+            </a>
+            <button onclick="window.print()" class="rp-action-btn rp-action-btn--ghost">
+                <i class="fas fa-print"></i> Print Result
+            </button>
+        </div>
+
+    </main>
+
+    <!-- ══════════════════════════════════════════════
+         SCRIPT
+    ══════════════════════════════════════════════ -->
+    <script>
+        var TARGET_PCT = @percentage;
+        var C = 2 * Math.PI * 68;
+
+        document.addEventListener('DOMContentLoaded', function () {
+
+            /* ── Animate ring + percentage counter ── */
+            var ring     = document.getElementById('scoreRing');
+            var display  = document.getElementById('pctDisplay');
+            ring.style.strokeDasharray  = C;
+            ring.style.strokeDashoffset = C;
+
+            var current  = 0;
+            var duration = 1400;
+            var start    = null;
+
+            function animateRing(ts) {
+                if (!start) start = ts;
+                var elapsed = ts - start;
+                var progress = Math.min(elapsed / duration, 1);
+                /* ease-out cubic */
+                var eased = 1 - Math.pow(1 - progress, 3);
+
+                current = Math.round(eased * TARGET_PCT);
+                display.textContent = current + '%';
+                ring.style.strokeDashoffset = C - (C * eased * TARGET_PCT / 100);
+
+                if (progress < 1) requestAnimationFrame(animateRing);
+                else display.textContent = TARGET_PCT + '%';
+            }
+            requestAnimationFrame(animateRing);
+
+        });
+
+        /* ── Filter cards ── */
+        function filterCards(state, btn) {
+            document.querySelectorAll('.rp-filter').forEach(function (b) {
+                b.classList.remove('rp-filter--active');
+            });
+            btn.classList.add('rp-filter--active');
+
+            document.querySelectorAll('.rp-card').forEach(function (card) {
+                if (state === 'all' || card.dataset.state === state) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+    </script>
+
+    <style>
+        /* ══════════════════════════════════════════════
+           BASE
+        ══════════════════════════════════════════════ */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #F0F4F8;
+            color: #0f172a;
+            min-height: 100vh;
+        }
+
+        /* ══════════════════════════════════════════════
+           HEADER
+        ══════════════════════════════════════════════ */
+        .rp-header {
+            background: #fff;
+            border-bottom: 1px solid #e2e8f0;
+            box-shadow: 0 2px 12px rgba(0,0,0,.05);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .rp-header__inner {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            height: 66px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .rp-header__brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .rp-brand-icon {
+            width: 38px;
+            height: 38px;
+            background: #185FA5;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 15px;
+            flex-shrink: 0;
+        }
+
+        .rp-brand-sub {
+            font-size: .65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .07em;
+            color: #94a3b8;
+            margin: 0 0 1px;
+        }
+
+        .rp-brand-title {
+            font-size: .88rem;
+            font-weight: 700;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 320px;
+            margin: 0;
+        }
+
+        .rp-back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            font-size: .75rem;
+            font-weight: 700;
+            color: #475569;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 9px;
+            padding: 7px 14px;
+            text-decoration: none;
+            transition: background .15s, color .15s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+            .rp-back-btn:hover {
+                background: #e2e8f0;
+                color: #0f172a;
+            }
+
+        /* ══════════════════════════════════════════════
+           HERO
+        ══════════════════════════════════════════════ */
+        .rp-hero {
+            padding: 3rem 1.5rem 2.5rem;
+            text-align: center;
+        }
+
+        .rp-hero--pass {
+            background: linear-gradient(160deg, #E1F5EE 0%, #F0F4F8 60%);
+            border-bottom: 1px solid #A7F3D0;
+        }
+
+        .rp-hero--fail {
+            background: linear-gradient(160deg, #FEE2E2 0%, #F0F4F8 60%);
+            border-bottom: 1px solid #FECACA;
+        }
+
+        .rp-hero__inner {
+            max-width: 700px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3rem;
+            flex-wrap: wrap;
+        }
+
+        /* Ring */
+        .rp-ring-wrap {
+            position: relative;
+            width: 160px;
+            height: 160px;
+            flex-shrink: 0;
+        }
+
+        .rp-ring {
+            width: 160px;
+            height: 160px;
+            transform: rotate(-90deg);
+        }
+
+        .rp-ring__track {
+            fill: none;
+            stroke: #e2e8f0;
+            stroke-width: 10;
+        }
+
+        .rp-ring__fill {
+            fill: none;
+            stroke-width: 10;
+            stroke-linecap: round;
+            transition: stroke-dashoffset .05s linear;
+        }
+
+        .rp-ring__center {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+        }
+
+        .rp-ring__pct {
+            font-family: 'Fira Code', monospace;
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: #0f172a;
+            letter-spacing: -1px;
+            line-height: 1;
+        }
+
+        .rp-ring__grade {
+            font-size: .75rem;
+            font-weight: 800;
+            color: #64748b;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+        }
+
+        /* Info */
+        .rp-hero__info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .rp-result-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            font-size: .75rem;
+            font-weight: 700;
+            border-radius: 20px;
+            padding: 5px 14px;
+            letter-spacing: .03em;
+        }
+
+        .rp-result-badge--pass {
+            background: #DCFCE7;
+            color: #15803D;
+            border: 1px solid #86EFAC;
+        }
+
+        .rp-result-badge--fail {
+            background: #FEE2E2;
+            color: #DC2626;
+            border: 1px solid #FCA5A5;
+        }
+
+        .rp-hero__score {
+            font-size: 2.8rem;
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1;
+            font-family: 'Fira Code', monospace;
+            letter-spacing: -2px;
+        }
+
+            .rp-hero__score span {
+                font-size: 1.4rem;
+                font-weight: 500;
+                color: #94a3b8;
+                letter-spacing: -1px;
+            }
+
+        .rp-hero__label {
+            font-size: .75rem;
+            color: #64748b;
+            font-weight: 500;
+            margin-top: -4px;
+        }
+
+        /* Stats */
+        .rp-stats {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .rp-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            background: #fff;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            padding: 10px 18px;
+            min-width: 72px;
+        }
+
+            .rp-stat i {
+                font-size: 1.1rem;
+            }
+
+        .rp-stat__num {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1;
+        }
+
+        .rp-stat__lbl {
+            font-size: .63rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+
+        .rp-stat--correct i, .rp-stat--correct .rp-stat__lbl {
+            color: #15803D;
+        }
+
+        .rp-stat--wrong i, .rp-stat--wrong .rp-stat__lbl {
+            color: #DC2626;
+        }
+
+        .rp-stat--skip i, .rp-stat--skip .rp-stat__lbl {
+            color: #94a3b8;
+        }
+
+        /* ══════════════════════════════════════════════
+           MAIN
+        ══════════════════════════════════════════════ */
+        .rp-main {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 4rem;
+        }
+
+        /* Section head */
+        .rp-section-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 1.5rem;
+        }
+
+        .rp-section-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+            .rp-section-title i {
+                color: #185FA5;
+            }
+
+        /* Filter row */
+        .rp-filter-row {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .rp-filter {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: .73rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 13px;
+            border-radius: 20px;
+            border: 1.5px solid #e2e8f0;
+            background: #fff;
+            color: #64748b;
+            cursor: pointer;
+            transition: all .15s;
+        }
+
+            .rp-filter:hover {
+                border-color: #94a3b8;
+                color: #334155;
+            }
+
+        .rp-filter--active {
+            background: #185FA5;
+            color: #fff;
+            border-color: #185FA5;
+        }
+
+        /* ══════════════════════════════════════════════
+           QUESTION CARDS
+        ══════════════════════════════════════════════ */
+        .rp-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .rp-card {
+            background: #fff;
+            border-radius: 14px;
+            border: 1.5px solid #e2e8f0;
+            padding: 20px 22px 18px;
+            animation: rp-fadein .4s ease both;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .rp-card::before {
+                content: '';
+                position: absolute;
+                left: 0;
+                top: 16px;
+                bottom: 16px;
+                width: 3.5px;
+                border-radius: 0 3px 3px 0;
+            }
+
+        .rp-card--correct {
+            border-color: #86EFAC;
+        }
+
+            .rp-card--correct::before {
+                background: #1D9E75;
+            }
+
+        .rp-card--wrong {
+            border-color: #FCA5A5;
+        }
+
+            .rp-card--wrong::before {
+                background: #E24B4A;
+            }
+
+        .rp-card--skipped {
+            border-color: #e2e8f0;
+        }
+
+            .rp-card--skipped::before {
+                background: #94a3b8;
+            }
+
+        @@keyframes rp-fadein {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* stagger */
+        .rp-card:nth-child(1) {
+            animation-delay: .04s
+        }
+
+        .rp-card:nth-child(2) {
+            animation-delay: .08s
+        }
+
+        .rp-card:nth-child(3) {
+            animation-delay: .12s
+        }
+
+        .rp-card:nth-child(4) {
+            animation-delay: .16s
+        }
+
+        .rp-card:nth-child(5) {
+            animation-delay: .20s
+        }
+
+        .rp-card:nth-child(6) {
+            animation-delay: .24s
+        }
+
+        .rp-card:nth-child(7) {
+            animation-delay: .28s
+        }
+
+        .rp-card:nth-child(8) {
+            animation-delay: .32s
+        }
+
+        .rp-card:nth-child(9) {
+            animation-delay: .36s
+        }
+
+        .rp-card:nth-child(10) {
+            animation-delay: .40s
+        }
+
+        /* Bar */
+        .rp-card__bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .rp-card__left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .rp-card__right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .rp-card__num {
+            width: 28px;
+            height: 28px;
+            background: #EEF2FF;
+            color: #3730A3;
+            font-size: .72rem;
+            font-weight: 800;
+            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        /* Type badge */
+        .rp-type-badge {
+            font-size: .65rem;
+            font-weight: 600;
+            padding: 2px 9px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .rp-type-badge--mcq {
+            background: #E6F1FB;
+            color: #185FA5;
+            border: 1px solid #BFDBFE;
+        }
+
+        .rp-type-badge--tf {
+            background: #EEEDFE;
+            color: #3C3489;
+            border: 1px solid #C4B5FD;
+        }
+
+        .rp-marks-chip {
+            font-size: .65rem;
+            font-weight: 600;
+            color: #B45309;
+            background: #FAEEDA;
+            border: 1px solid #FCD34D;
+            border-radius: 20px;
+            padding: 2px 9px;
+        }
+
+        /* Verdict */
+        .rp-verdict {
+            font-size: .7rem;
+            font-weight: 700;
+            border-radius: 20px;
+            padding: 3px 10px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .rp-verdict--correct {
+            background: #DCFCE7;
+            color: #15803D;
+            border: 1px solid #86EFAC;
+        }
+
+        .rp-verdict--wrong {
+            background: #FEE2E2;
+            color: #DC2626;
+            border: 1px solid #FCA5A5;
+        }
+
+        .rp-verdict--skipped {
+            background: #F1F5F9;
+            color: #64748b;
+            border: 1px solid #CBD5E1;
+        }
+
+        /* Question text */
+        .rp-card__q {
+            font-size: .92rem;
+            font-weight: 600;
+            color: #1e293b;
+            line-height: 1.6;
+            margin-bottom: 14px;
+        }
+
+        /* ══════════════════════════════════════════════
+           CHOICES
+        ══════════════════════════════════════════════ */
+        .rp-choices {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .rp-choice {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 9px;
+            border: 1.5px solid #e2e8f0;
+            background: #f8fafc;
+            position: relative;
+        }
+
+        /* correct answer that was NOT picked — show as green outline */
+        .rp-choice--correct {
+            border-color: #86EFAC;
+            background: #F0FDF4;
+        }
+
+        /* student picked this AND it's correct */
+        .rp-choice--correct-picked {
+            border-color: #1D9E75;
+            background: #DCFCE7;
+        }
+
+        /* student picked this AND it's wrong */
+        .rp-choice--wrong-picked {
+            border-color: #FCA5A5;
+            background: #FEE2E2;
+        }
+
+        .rp-choice__letter {
+            width: 26px;
+            height: 26px;
+            border-radius: 6px;
+            background: #e2e8f0;
+            color: #475569;
+            font-size: .72rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .rp-choice__letter--hi {
+            background: transparent;
+        }
+
+        .rp-choice--correct-picked .rp-choice__letter {
+            background: #1D9E75;
+            color: #fff;
+        }
+
+        .rp-choice--correct .rp-choice__letter {
+            background: #86EFAC;
+            color: #14532D;
+        }
+
+        .rp-choice--wrong-picked .rp-choice__letter {
+            background: #E24B4A;
+            color: #fff;
+        }
+
+        .rp-choice__text {
+            font-size: .84rem;
+            font-weight: 500;
+            color: #334155;
+            flex: 1;
+            line-height: 1.4;
+        }
+
+        .rp-choice--correct-picked .rp-choice__text,
+        .rp-choice--correct .rp-choice__text {
+            color: #14532D;
+            font-weight: 600;
+        }
+
+        .rp-choice--wrong-picked .rp-choice__text {
+            color: #991B1B;
+            font-weight: 600;
+        }
+
+        .rp-choice__icon {
+            font-size: .9rem;
+            flex-shrink: 0;
+        }
+
+        .rp-choice--correct-picked .rp-choice__icon,
+        .rp-choice--correct .rp-choice__icon {
+            color: #15803D;
+        }
+
+        .rp-choice--wrong-picked .rp-choice__icon {
+            color: #DC2626;
+        }
+
+        /* tags */
+        .rp-choice__tag {
+            font-size: .62rem;
+            font-weight: 700;
+            border-radius: 20px;
+            padding: 2px 8px;
+            white-space: nowrap;
+        }
+
+        .rp-choice__tag--yours {
+            background: #FEE2E2;
+            color: #DC2626;
+            border: 1px solid #FCA5A5;
+        }
+
+        .rp-choice__tag--correct {
+            background: #DCFCE7;
+            color: #15803D;
+            border: 1px solid #86EFAC;
+        }
+
+        /* ══════════════════════════════════════════════
+           BOTTOM ACTIONS
+        ══════════════════════════════════════════════ */
+        .rp-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 2.5rem;
+            flex-wrap: wrap;
+        }
+
+        .rp-action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: .82rem;
+            font-weight: 700;
+            padding: 11px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: filter .15s, transform .12s;
+        }
+
+            .rp-action-btn:active {
+                transform: scale(.97);
+            }
+
+        .rp-action-btn--outline {
+            background: #185FA5;
+            color: #fff;
+            border: none;
+        }
+
+            .rp-action-btn--outline:hover {
+                filter: brightness(1.1);
+                color: #fff;
+            }
+
+        .rp-action-btn--ghost {
+            background: #fff;
+            color: #475569;
+            border: 1.5px solid #e2e8f0;
+        }
+
+            .rp-action-btn--ghost:hover {
+                border-color: #94a3b8;
+                color: #0f172a;
+            }
+
+        /* ══════════════════════════════════════════════
+           PRINT
+        ══════════════════════════════════════════════ */
+        @@media print {
+            .rp-header, .rp-filter-row, .rp-actions, .rp-back-btn {
+                display: none;
+            }
+
+            .rp-hero {
+                print-color-adjust: exact;
+            }
+
+            .rp-card {
+                break-inside: avoid;
+            }
+        }
+
+        /* ══════════════════════════════════════════════
+           RESPONSIVE
+        ══════════════════════════════════════════════ */
+        @@media (max-width: 640px) {
+            .rp-hero__inner {
+                gap: 1.5rem;
+            }
+
+            .rp-hero {
+                padding: 2rem 1rem 1.75rem;
+            }
+
+            .rp-hero__score {
+                font-size: 2rem;
+            }
+
+            .rp-main {
+                padding: 1.5rem 1rem 3rem;
+            }
+
+            .rp-card {
+                padding: 16px 16px 14px;
+            }
+
+            .rp-brand-title {
+                max-width: 160px;
+            }
+
+            .rp-section-head {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+
+</body>
+</html>

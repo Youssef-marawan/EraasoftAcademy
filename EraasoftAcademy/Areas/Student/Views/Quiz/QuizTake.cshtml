@@ -1,0 +1,1125 @@
+﻿@using EraasoftAcademy.ViewModel.QuizVM
+@model QuizTakeVM
+@{
+    ViewData["Title"] = Model.Title;
+    Layout = null; /* full-screen, no navbar */
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@Model.Title — EraasoftAcademy</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body>
+
+    <!-- ══════════════════════════════════════════════════════
+         SUBMIT CONFIRMATION MODAL
+    ══════════════════════════════════════════════════════ -->
+    <div class="modal-overlay" id="submitModal">
+        <div class="modal-box">
+            <div class="modal-icon">
+                <i class="fas fa-paper-plane"></i>
+            </div>
+            <h3 class="modal-title">Submit Quiz?</h3>
+            <p class="modal-desc" id="modalDesc">You have answered <strong id="answeredCount">0</strong> of <strong>@Model.Questions.Count</strong> questions.</p>
+            <p class="modal-warn" id="modalWarn"></p>
+            <div class="modal-actions">
+                <button class="modal-cancel" onclick="closeSubmitModal()">Review Answers</button>
+                <button class="modal-confirm">
+                    <i class="fas fa-check"></i> Submit Now
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════
+         STICKY HEADER — TIMER + PROGRESS
+    ══════════════════════════════════════════════════════ -->
+    <header class="qa-header">
+        <div class="qa-header__inner">
+
+            <!-- Left: quiz info -->
+            <div class="qa-header__info">
+                <div class="qa-header__logo">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <div>
+                    <h1 class="qa-header__title">@Model.Title</h1>
+                </div>
+            </div>
+
+            <!-- Center: timer -->
+            <div class="qa-timer" id="timerBlock">
+                <div class="qa-timer__ring">
+                    <svg viewBox="0 0 48 48" class="qa-timer__svg">
+                        <circle cx="24" cy="24" r="20" class="qa-timer__track" />
+                        <circle cx="24" cy="24" r="20" class="qa-timer__fill" id="timerRing" />
+                    </svg>
+                    <div class="qa-timer__center">
+                        <span class="qa-timer__time" id="timerDisplay">--:--</span>
+                    </div>
+                </div>
+                <div class="qa-timer__meta">
+                    <span class="qa-timer__label">Time Left</span>
+                    <span class="qa-timer__total">@Model.Duration min total</span>
+                </div>
+            </div>
+
+            <!-- Right: progress + submit -->
+            
+
+        </div>
+    </header>
+
+    <!-- ══════════════════════════════════════════════════════
+         MAIN CONTENT
+    ══════════════════════════════════════════════════════ -->
+    <main class="qa-main">
+        <form id="quizForm" method="post" action="/Student/Quiz/Submit">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="QuizId" value="@Model.Id" />
+            <div class="qa-header__right">
+                <div class="qa-progress">
+                    <div class="qa-progress__bar">
+                        <div class="qa-progress__fill" id="progressFill"></div>
+                    </div>
+                    <span class="qa-progress__label"><span id="answeredCounter">0</span> / @Model.Questions.Count answered</span>
+                </div>
+
+                <button type="submit" class="qa-submit-btn" >
+                    <i class="fas fa-check"></i> Submit Quiz
+                </button>
+            </div>
+            <div class="qa-questions">
+                @for (int i = 0; i < Model.Questions.Count; i++)
+                {
+                    var question = Model.Questions[i];
+                    <div class="qa-card" id="qcard-@question.Id" data-qid="@question.Id">
+
+                        <!-- مهم جدا: index binding -->
+                        <input type="hidden"
+                               name="StudentAnswers[@i].QuizQuestionId"
+                               value="@question.Id" />
+
+                        <!-- Question number badge + text -->
+                        <div class="qa-card__header">
+                            <span class="qa-card__num">@(i + 1)</span>
+                            <div class="qa-card__meta-right">
+                                @if (question.QuestionType == DomainLayer.Enums.QuestionTypes.TrueFalse)
+                                {
+                                    <span class="qa-type-badge qa-type-badge--tf">
+                                        <i class="fas fa-toggle-on"></i> True / False
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="qa-type-badge qa-type-badge--mcq">
+                                        <i class="fas fa-list-ul"></i> MCQ
+                                    </span>
+                                }
+                                <span class="qa-marks-badge">@question.Marks mark@(question.Marks != 1 ? "s" : "")</span>
+                            </div>
+                        </div>
+
+                        <p class="qa-card__text">@question.QuestionText</p>
+
+                        <!-- ── True / False ── -->
+                        @if (question.QuestionType == DomainLayer.Enums.QuestionTypes.TrueFalse)
+                        {
+                            <div class="qa-tf-row">
+                                @foreach (var opt in question.QuestionChoices)
+                                {
+                                    var isTrueOpt = opt.ChoiceText.Trim().ToLower() == "true";
+                                    <label class="qa-tf-option"
+                                           id="tf-@opt.Id-@question.Id">
+                                        <input type="hidden"
+                                               name="StudentAnswers[@i].QuestionId"
+                                               value="@question.Id" />
+                                        <input type="hidden"
+                                               name="StudentAnswers[@i].Score"
+                                               value="@question.Marks" />
+                                        <input type="radio"
+                                               name="StudentAnswers[@i].SelectedAnswerId"
+                                               value="@opt.Id"
+                                               onchange="onAnswered('@question.Id')" />
+                                        <span class="qa-tf-icon @(isTrueOpt ? "qa-tf-icon--true" : "qa-tf-icon--false")">
+                                            <i class="fas @(isTrueOpt ? "fa-check" : "fa-times")"></i>
+                                        </span>
+                                        <span class="qa-tf-label">@opt.ChoiceText</span>
+                                    </label>
+                                }
+                            </div>
+                        }
+                        <!-- ── MCQ ── -->
+                        @if (question.QuestionType == DomainLayer.Enums.QuestionTypes.MultipleChoice)
+                        {
+                        <div class="qa-options">
+                            @{
+                                char optLetter = 'A';
+                            }
+                            @foreach (var opt in question.QuestionChoices)
+                            {
+                                <label class="qa-option" id="opt-@opt.Id">
+                                        <input type="hidden"
+                                               name="StudentAnswers[@i].QuestionId"
+                                               value="@question.Id" />
+                                        <input type="hidden"
+                                               name="StudentAnswers[@i].Score"
+                                               value="@question.Marks" />
+                                        <input type="radio"
+                                               name="StudentAnswers[@i].SelectedAnswerId"
+                                               value="@opt.Id"
+                                               onchange="onAnswered('@question.Id')" />
+
+                                        <span class="qa-option__letter">@optLetter</span>
+                                        <span class="qa-option__text">@opt.ChoiceText</span>
+                                        <span class="qa-option__check"><i class="fas fa-check"></i></span>
+                                </label>
+                                optLetter++;
+                            }
+                        </div>
+                        }
+
+                        <!-- answered indicator -->
+                        <div class="qa-card__answered" id="answered-@question.Id">
+                            <i class="fas fa-circle-check"></i> Answered
+                        </div>
+
+                        
+
+                    </div>
+                }
+            </div>
+
+           
+
+        </form>
+    </main>
+
+    <!-- ══════════════════════════════════════════════════════
+         SCRIPT
+    ══════════════════════════════════════════════════════ -->
+    <script>
+        /* ── Config ── */
+        // استخدم parseFloat لضمان تحويل القيمة القادمة من السيرفر لرقم صحيحة
+        var duration = parseFloat("@Model.Duration");
+        var TOTAL_SECONDS   = (isNaN(duration) ? 10 : duration) * 60;
+        var TOTAL_QUESTIONS = parseInt("@Model.Questions.Count");
+        var secondsLeft     = TOTAL_SECONDS;
+        var answered        = {};
+
+        // تعريف الدالة قبل استخدامها لضمان عملها
+        function pad(n) { return n < 10 ? '0' + n : n; }
+
+        /* ── Timer ── */
+        function updateTimer() {
+            var timerDisplay = document.getElementById('timerDisplay');
+            var timerRing    = document.getElementById('timerRing');
+            var timerBlock   = document.getElementById('timerBlock');
+
+            if (!timerDisplay || !timerRing) return;
+
+            var CIRCUMFERENCE = 2 * Math.PI * 20;
+            timerRing.style.strokeDasharray = CIRCUMFERENCE;
+
+            if (secondsLeft <= 0) {
+                timerDisplay.textContent = '00:00';
+                timerRing.style.strokeDashoffset = CIRCUMFERENCE;
+                submitQuiz();
+                return;
+            }
+
+            var m = Math.floor(secondsLeft / 60);
+            var s = secondsLeft % 60;
+            timerDisplay.textContent = pad(m) + ':' + pad(s);
+
+            var pct  = secondsLeft / TOTAL_SECONDS;
+            timerRing.style.strokeDashoffset = CIRCUMFERENCE * (1 - pct);
+
+            // تغيير الألوان بناءً على الوقت المتبقي
+            if (pct > 0.5) {
+                timerRing.style.stroke = '#1D9E75';
+                timerBlock.classList.remove('qa-timer--warn', 'qa-timer--danger');
+            }
+            else if (pct > 0.25) {
+                timerRing.style.stroke = '#EF9F27';
+                timerBlock.classList.add('qa-timer--warn');
+                timerBlock.classList.remove('qa-timer--danger');
+            }
+            else {
+                timerRing.style.stroke = '#E24B4A';
+                timerBlock.classList.add('qa-timer--danger');
+            }
+
+            secondsLeft--;
+        }
+
+        /* ── Answer tracking ── */
+        function onAnswered(qid) {
+            answered[qid] = true;
+            var card = document.getElementById('qcard-' + qid);
+            if (card) card.classList.add('qa-card--answered');
+            var indicator = document.getElementById('answered-' + qid);
+            if (indicator) indicator.classList.add('qa-card__answered--visible');
+            updateProgress();
+        }
+
+        function updateProgress() {
+            var count = Object.keys(answered).length;
+            var pct   = (count / TOTAL_QUESTIONS) * 100;
+            var fill = document.getElementById('progressFill');
+            var counter = document.getElementById('answeredCounter');
+
+            if (fill) fill.style.width = pct + '%';
+            if (counter) counter.textContent = count;
+        }
+
+        /* ── Submit functions ── */
+        function openSubmitModal() {
+            var count = Object.keys(answered).length;
+            var unanswered = TOTAL_QUESTIONS - count;
+            var answeredText = document.getElementById('answeredCount');
+            if (answeredText) answeredText.textContent = count;
+
+            var warn = document.getElementById('modalWarn');
+            if (unanswered > 0) {
+                warn.textContent = '⚠ ' + unanswered + ' question' + (unanswered > 1 ? 's are' : ' is') + ' still unanswered.';
+                warn.style.display = 'block';
+            } else {
+                warn.style.display = 'none';
+            }
+            document.getElementById('submitModal').classList.add('modal-overlay--visible');
+        }
+
+        function closeSubmitModal() {
+            document.getElementById('submitModal').classList.remove('modal-overlay--visible');
+        }
+
+        function submitQuiz() {
+            document.getElementById('quizForm').submit();
+        }
+
+        /* ── Initialization ── */
+        document.addEventListener('DOMContentLoaded', function () {
+            // تشغيل التايمر فوراً ثم كل ثانية
+            updateTimer();
+            var timerInterval = setInterval(updateTimer, 1000);
+
+            // ربط زر التأكيد داخل الـ Modal بالـ submit
+            var confirmBtn = document.querySelector('.modal-confirm');
+            if (confirmBtn) {
+                confirmBtn.addEventListener('click', submitQuiz);
+            }
+
+            // إغلاق المودال عند النقر في الخارج أو الضغط على Escape
+            var modal = document.getElementById('submitModal');
+            modal.addEventListener('click', function (e) {
+                if (e.target === this) closeSubmitModal();
+            });
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') closeSubmitModal();
+            });
+        });
+    </script>
+
+    <style>
+        /* ══════════════════════════════════════════════════════
+           BASE
+        ══════════════════════════════════════════════════════ */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #F0F4F8;
+            color: #0f172a;
+            min-height: 100vh;
+        }
+
+        /* ══════════════════════════════════════════════════════
+           STICKY HEADER
+        ══════════════════════════════════════════════════════ */
+        /* تأكد أن الحاوية بتسمح للعناصر بالحفاظ على حجمها الطبيعي */
+        .qa-header__right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-shrink: 0; /* يمنع الحاوية من الانكماش */
+        }
+
+        /* ضبط الزرار نفسه */
+        .modal-confirm {
+            width: auto; /* يمنع الزرار من أخذ العرض الكامل */
+            min-width: 140px; /* يعطيه عرض أدنى مناسب */
+            padding: 10px 20px; /* مساحات داخلية متناسقة */
+            height: fit-content;
+            cursor: pointer;
+            border-radius: 10px;
+            border: none;
+            font-size: 0.85rem;
+            font-weight: 700;
+            display: inline-flex; /* يجعل محتوى الزرار (الأيقونة والنص) في المنتصف */
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        /* لو الزرار داخل الـ Header يفضل نستخدم class الـ btn اللي انت عامله قبل كدة */
+        .qa-submit-btn {
+            width: auto !important;
+            display: inline-flex !important;
+        }
+        
+        .qa-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: #fff;
+            border-bottom: 1px solid #e2e8f0;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+        }
+
+        .qa-header__inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        /* Left */
+        .qa-header__info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .qa-header__logo {
+            width: 40px;
+            height: 40px;
+            background: #185FA5;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .qa-header__course {
+            font-size: 0.68rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: #94a3b8;
+            margin: 0 0 2px;
+        }
+
+        .qa-header__title {
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 240px;
+            margin: 0;
+        }
+
+        /* Center: Timer */
+        .qa-timer {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .qa-timer__ring {
+            position: relative;
+            width: 48px;
+            height: 48px;
+            flex-shrink: 0;
+        }
+
+        .qa-timer__svg {
+            width: 48px;
+            height: 48px;
+            transform: rotate(-90deg);
+        }
+
+        .qa-timer__track {
+            fill: none;
+            stroke: #e2e8f0;
+            stroke-width: 4;
+        }
+
+        .qa-timer__fill {
+            fill: none;
+            stroke: #1D9E75;
+            stroke-width: 4;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.9s linear, stroke 0.5s ease;
+        }
+
+        .qa-timer__center {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .qa-timer__time {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #0f172a;
+            letter-spacing: -0.5px;
+        }
+
+        .qa-timer__meta {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .qa-timer__label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #334155;
+        }
+
+        .qa-timer__total {
+            font-size: 0.65rem;
+            color: #94a3b8;
+        }
+
+        .qa-timer--warn .qa-timer__time {
+            color: #B45309;
+        }
+
+        .qa-timer--danger .qa-timer__time {
+            color: #991B1B;
+        }
+
+        .qa-timer--danger .qa-timer__ring {
+            animation: qa-pulse-ring 0.8s ease-in-out infinite;
+        }
+
+        @@keyframes qa-pulse-ring {
+            0%, 100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.06);
+            }
+        }
+
+        /* Right */
+        .qa-header__right {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-shrink: 0;
+        }
+
+        .qa-progress {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            align-items: flex-end;
+        }
+
+        .qa-progress__bar {
+            width: 120px;
+            height: 5px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .qa-progress__fill {
+            height: 100%;
+            background: linear-gradient(90deg, #185FA5, #1D9E75);
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        .qa-progress__label {
+            font-size: 0.68rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        /* Submit button (header) */
+        .qa-submit-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: #185FA5;
+            color: #fff;
+            border: none;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 700;
+            padding: 9px 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: filter 0.15s, transform 0.12s;
+            white-space: nowrap;
+        }
+
+            .qa-submit-btn:hover {
+                filter: brightness(1.1);
+            }
+
+            .qa-submit-btn:active {
+                transform: scale(0.97);
+            }
+
+        /* ══════════════════════════════════════════════════════
+           MAIN
+        ══════════════════════════════════════════════════════ */
+        .qa-main {
+            max-width: 780px;
+            margin: 0 auto;
+            padding: 2rem 1.25rem 6rem;
+        }
+
+        /* ══════════════════════════════════════════════════════
+           QUESTION CARD
+        ══════════════════════════════════════════════════════ */
+        .qa-questions {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .qa-card {
+            background: #fff;
+            border-radius: 16px;
+            border: 1.5px solid #e2e8f0;
+            padding: 22px 24px 18px;
+            position: relative;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            animation: qa-fadein 0.4s ease both;
+        }
+
+        .qa-card--answered {
+            border-color: #97C459;
+            box-shadow: 0 4px 20px rgba(99,153,34,0.08);
+        }
+
+        @@keyframes qa-fadein {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* staggered delay for first 15 */
+        .qa-card:nth-child(1) {
+            animation-delay: 0.04s
+        }
+
+        .qa-card:nth-child(2) {
+            animation-delay: 0.08s
+        }
+
+        .qa-card:nth-child(3) {
+            animation-delay: 0.12s
+        }
+
+        .qa-card:nth-child(4) {
+            animation-delay: 0.16s
+        }
+
+        .qa-card:nth-child(5) {
+            animation-delay: 0.20s
+        }
+
+        .qa-card:nth-child(6) {
+            animation-delay: 0.24s
+        }
+
+        .qa-card:nth-child(7) {
+            animation-delay: 0.28s
+        }
+
+        .qa-card:nth-child(8) {
+            animation-delay: 0.32s
+        }
+
+        .qa-card:nth-child(9) {
+            animation-delay: 0.36s
+        }
+
+        .qa-card:nth-child(10) {
+            animation-delay: 0.40s
+        }
+
+        /* Header row */
+        .qa-card__header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .qa-card__num {
+            width: 32px;
+            height: 32px;
+            background: #EEF2FF;
+            color: #3730A3;
+            font-size: 0.8rem;
+            font-weight: 800;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .qa-card__meta-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Type badges */
+        .qa-type-badge {
+            font-size: 0.68rem;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            letter-spacing: 0.01em;
+        }
+
+        .qa-type-badge--mcq {
+            background: #E6F1FB;
+            color: #185FA5;
+            border: 1px solid #BFDBFE;
+        }
+
+        .qa-type-badge--tf {
+            background: #EEEDFE;
+            color: #3C3489;
+            border: 1px solid #C4B5FD;
+        }
+
+        .qa-marks-badge {
+            font-size: 0.68rem;
+            font-weight: 600;
+            color: #B45309;
+            background: #FAEEDA;
+            border: 1px solid #FCD34D;
+            border-radius: 20px;
+            padding: 3px 10px;
+        }
+
+        /* Question text */
+        .qa-card__text {
+            font-size: 0.97rem;
+            font-weight: 600;
+            color: #1e293b;
+            line-height: 1.6;
+            margin-bottom: 18px;
+        }
+
+        /* ── MCQ Options ─────────────────────────────────────── */
+        .qa-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .qa-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1.5px solid #e2e8f0;
+            background: #f8fafc;
+            cursor: pointer;
+            transition: border-color 0.15s, background 0.15s, transform 0.1s;
+            position: relative;
+        }
+
+            .qa-option input[type="radio"] {
+                display: none;
+            }
+
+            .qa-option:hover {
+                border-color: #93C5FD;
+                background: #EFF6FF;
+                transform: translateX(3px);
+            }
+
+            .qa-option:has(input:checked) {
+                border-color: #185FA5;
+                background: #EFF6FF;
+            }
+
+        .qa-option__letter {
+            width: 28px;
+            height: 28px;
+            border-radius: 7px;
+            background: #e2e8f0;
+            color: #475569;
+            font-size: 0.75rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .qa-option:has(input:checked) .qa-option__letter {
+            background: #185FA5;
+            color: #fff;
+        }
+
+        .qa-option__text {
+            font-size: 0.88rem;
+            font-weight: 500;
+            color: #334155;
+            flex: 1;
+            line-height: 1.45;
+        }
+
+        .qa-option:has(input:checked) .qa-option__text {
+            color: #0f172a;
+            font-weight: 600;
+        }
+
+        .qa-option__check {
+            font-size: 0.75rem;
+            color: #185FA5;
+            opacity: 0;
+            transition: opacity 0.15s;
+        }
+
+        .qa-option:has(input:checked) .qa-option__check {
+            opacity: 1;
+        }
+
+        /* ── True / False ────────────────────────────────────── */
+        .qa-tf-row {
+            display: flex;
+            gap: 14px;
+        }
+
+        .qa-tf-option {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px;
+            border-radius: 12px;
+            border: 1.5px solid #e2e8f0;
+            background: #f8fafc;
+            cursor: pointer;
+            transition: border-color 0.15s, background 0.15s, transform 0.1s;
+            flex-direction: column;
+        }
+
+            .qa-tf-option input[type="radio"] {
+                display: none;
+            }
+
+            .qa-tf-option:hover {
+                transform: translateY(-2px);
+            }
+
+            .qa-tf-option:has(input:checked) {
+                border-color: transparent;
+            }
+
+        .qa-tf-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .qa-tf-icon--true {
+            background: #DCFCE7;
+            color: #15803D;
+        }
+
+        .qa-tf-icon--false {
+            background: #FEE2E2;
+            color: #DC2626;
+        }
+
+        .qa-tf-option:has(input:checked) .qa-tf-icon--true {
+            background: #15803D;
+            color: #fff;
+        }
+
+        .qa-tf-option:has(input:checked) .qa-tf-icon--false {
+            background: #DC2626;
+            color: #fff;
+        }
+
+        .qa-tf-option:has(input:checked) {
+            border-color: #e2e8f0;
+            background: #f8fafc;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+        }
+
+        .qa-tf-label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #334155;
+        }
+
+        /* ── Answered badge ──────────────────────────────────── */
+        .qa-card__answered {
+            display: none;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #3B6D11;
+            margin-top: 12px;
+        }
+
+        .qa-card__answered--visible {
+            display: flex;
+        }
+
+        /* ══════════════════════════════════════════════════════
+           BOTTOM BAR
+        ══════════════════════════════════════════════════════ */
+        .qa-bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border-top: 1px solid #e2e8f0;
+            padding: 14px 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            z-index: 90;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
+        }
+
+        .qa-bottom-bar__count {
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: #64748b;
+        }
+
+        .qa-submit-btn--large {
+            font-size: 0.85rem;
+            padding: 11px 24px;
+            background: linear-gradient(135deg, #185FA5, #1D9E75);
+        }
+
+        /* ══════════════════════════════════════════════════════
+           SUBMIT MODAL
+        ══════════════════════════════════════════════════════ */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.22s ease;
+        }
+
+        .modal-overlay--visible {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-box {
+            background: #fff;
+            border-radius: 20px;
+            padding: 32px 28px 28px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.16);
+            transform: translateY(16px) scale(0.97);
+            transition: transform 0.25s cubic-bezier(.34,1.56,.64,1), opacity 0.22s ease;
+            opacity: 0;
+        }
+
+        .modal-overlay--visible .modal-box {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }
+
+        .modal-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #185FA5, #1D9E75);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 1.25rem;
+            margin: 0 auto 16px;
+        }
+
+        .modal-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 0 0 8px;
+        }
+
+        .modal-desc {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin: 0 0 10px;
+            line-height: 1.55;
+        }
+
+        .modal-warn {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #92400E;
+            background: #FAEEDA;
+            border: 1px solid #FCD34D;
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            display: none;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .modal-cancel {
+            flex: 1;
+            background: none;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #64748b;
+            padding: 10px;
+            cursor: pointer;
+            transition: border-color 0.15s, color 0.15s;
+        }
+
+            .modal-cancel:hover {
+                border-color: #94a3b8;
+                color: #334155;
+            }
+
+        .modal-confirm {
+            flex: 1;
+            background: linear-gradient(135deg, #185FA5, #1D9E75);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 700;
+            padding: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            transition: filter 0.15s, transform 0.12s;
+        }
+
+            .modal-confirm:hover {
+                filter: brightness(1.08);
+            }
+
+            .modal-confirm:active {
+                transform: scale(0.97);
+            }
+
+        /* ══════════════════════════════════════════════════════
+           RESPONSIVE
+        ══════════════════════════════════════════════════════ */
+        @@media (max-width: 640px) {
+            .qa-header__title {
+                max-width: 120px;
+                font-size: 0.82rem;
+            }
+
+            .qa-header__inner {
+                padding: 0 1rem;
+            }
+
+            .qa-progress {
+                display: none;
+            }
+
+            .qa-timer__meta {
+                display: none;
+            }
+
+            .qa-submit-btn:not(.qa-submit-btn--large) {
+                padding: 8px 12px;
+                font-size: 0.72rem;
+            }
+
+            .qa-main {
+                padding: 1.25rem 0.85rem 5rem;
+            }
+
+            .qa-tf-row {
+                flex-direction: row;
+                gap: 10px;
+            }
+
+            .qa-card {
+                padding: 16px 16px 14px;
+            }
+        }
+    </style>
+</body>
+</html>

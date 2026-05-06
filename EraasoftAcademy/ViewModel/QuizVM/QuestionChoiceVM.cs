@@ -1,4 +1,4 @@
-﻿namespace EraasoftAcademy.ViewModel
+﻿namespace EraasoftAcademy.ViewModel.Quiz
 {
     public class QuestionChoiceVM
     {

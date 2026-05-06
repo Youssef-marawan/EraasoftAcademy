@@ -3,6 +3,7 @@ using EraasoftAcademy.Models;
 using EraasoftAcademy.Repositories;
 using EraasoftAcademy.Repositories.IRepositories;
 using EraasoftAcademy.ViewModel;
+using EraasoftAcademy.ViewModel.Quiz;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
@@ -34,7 +35,7 @@ namespace EraasoftAcademy.Areas.Admin.Controllers
                                                         q => q.Course
                                                     });
 
-            var quizList = new ViewModel.QuizVM()
+            var quizList = new ViewModel.QuizVM.QuizVM()
             {
                 QuizList = (IEnumerable<Quiz>)quizzes
             };
@@ -66,7 +67,7 @@ namespace EraasoftAcademy.Areas.Admin.Controllers
             {
                 quiz.QuizCode = Guid.NewGuid()
                                             .ToString("N")
-                                            .Substring(0, 8)
+                                            .Substring(0, 6)
                                             .ToUpper();
                 quiz.ScheduledDate = DateTime.UtcNow;
                 await _QuizRepo.AddAsync(quiz);
